@@ -7,10 +7,16 @@ from jinja2 import Environment, FileSystemLoader
 
 from ...lstaxer.kre8 import build_generator_context
 
+# ANCHOR - add new random generator string
+from random import choices
+import string
 
 _TEMPLATE_DIR = Path(__file__).resolve().parents[3] / 'templates'
 _TEMPLATE_NAME = 'appc.txt'
 
+def _random_string(length: int = 8) -> str:
+  """Generate a random string of specified length."""
+  return ''.join(choices(string.ascii_letters + string.digits, k=length))
 
 def _actions(action_list: dict[str, Any] | None) -> list[dict[str, Any]]:
   if not action_list:
@@ -42,6 +48,7 @@ def _resolve_task_symbol(value: str, task_symbols: set[str]) -> str:
 
 
 def _emit_action(action: dict[str, Any], task_symbols: set[str]) -> str:
+  random_str = _random_string()
   kind = action.get('actv', '')
   if kind == 'c_stmt':
     return action.get('code') or '/* c_stmt requires code. */'
@@ -56,18 +63,17 @@ def _emit_action(action: dict[str, Any], task_symbols: set[str]) -> str:
     if not target or not signal:
       return '/* post_msg requires to and sig. */'
     if not value:
-      return '{ uedp_msg_t* msg = uedp_msg_alloc(%s, %s, 0u); if (msg) { uedp_task_norm_post_msg(%s, msg); } }' % (target, signal, target)
+      return 'uedp_msg_t* alloced_msg_%s = uedp_msg_alloc(%s, %s, 0u);\nif (alloced_msg_%s) {\n  uedp_task_norm_post_msg(%s, alloced_msg_%s);\n}' % (random_str, target, signal, random_str, target, random_str)
     if str(mode).upper() == 'REF':
       size = 'sizeof(void*)'
-      setter = f'uedp_msg_set_data_ref(msg, (void*)&{value});'
+      setter = f'uedp_msg_set_data_ref(alloced_msg_%s, (void*)&{value});' % random_str
     else:
       size = f'sizeof({value})' if not data_type else f'sizeof({value})'
-      setter = f'uedp_msg_set_data(msg, (const ui8*)&{value}, (ui8){size});'
-    return '{ uedp_msg_t* msg = uedp_msg_alloc(%s, %s, %s); if (msg) { %s uedp_task_norm_post_msg(%s, msg); } }' % (target, signal, size, setter, target)
+      setter = f'uedp_msg_set_data(alloced_msg_%s, (const ui8*)&{value}, (ui8){size});' % random_str
+    return 'uedp_msg_t* alloced_msg_%s = uedp_msg_alloc(%s, %s, %s);\nif (alloced_msg_%s) {\n  %s\n  uedp_task_norm_post_msg(%s, alloced_msg_%s);\n}' % (random_str, target, signal, size, random_str, setter, target, random_str)
   if action.get('code'):
     return action['code']
   return f'/* action {kind} requires an explicit c_call or c_stmt schema. */'
-
 
 def _emit_actions(actions: list[dict[str, Any]], task_symbols: set[str]) -> list[str]:
   return [_emit_action(action, task_symbols) for action in actions]
@@ -202,8 +208,13 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
     for task in tnorm_codegen
     if task['fsm_states']
   )
+  # Find any task containing USR, as the initial message to start the user task
+  usr_task = next((task for task in tnorm_codegen if 'USR' in task['task']), None)
+  if usr_task:
+    context['init_actions'].append(
+      f'uedp_msg_t* start_msg = uedp_msg_alloc({usr_task["task"]}, SIG_USR_START, 0u);\n  if (start_msg) {{\n    uedp_task_norm_post_msg({usr_task["task"]}, start_msg); \n  }}'
+    )
   return context
-
 
 def render_appc(yaml_text: str) -> str:
   """Render post-logicdef YAML into complete app.c source text."""
@@ -212,7 +223,6 @@ def render_appc(yaml_text: str) -> str:
     keep_trailing_newline=True,
   )
   return env.get_template(_TEMPLATE_NAME).render(**build_appc_context(yaml_text))
-
 
 def generate_appc(yaml_path: str | Path, output_path: str | Path) -> Path:
   """Generate app.c from YAML without modifying the pre-logicdef pipeline."""
