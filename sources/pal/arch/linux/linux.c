@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <time.h>
-#include "linux_arch.h"
+#include "linux.h"
 #include "uedp_core.h"
 #include "uedp_task.h"
 
