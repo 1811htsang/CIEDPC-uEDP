@@ -18,6 +18,16 @@ Cú pháp của μE-LS được thiết kế để dễ đọc và dễ viết, 
 - **Phân biệt chữ hoa/thường:** YAML có phân biệt chữ hoa và chữ thường (`Task` khác với `task`).
 - **Phần mở rộng tệp:** Thường sử dụng `.yaml` hoặc `.yml`.
 
+Một lưu ý quan trọng để viết file cấu hình chính là đảm bảo nguyên tắc "Hữu trưởng thứ, Trống lui, Tồn giữ". Nghĩa là nếu xét giữa một tag A (tag cha) và tag B (tag con), tag cha NULL thì tag con nên thụt lùi, tag cha khác NULL thì tag con không thụt lùi. Nếu tag cha NULL mà tag con không thụt lùi thì parser sẽ báo lỗi. Nếu tag cha khác NULL mà tag con thụt lùi thì parser sẽ báo lỗi.
+
+Ví dụ:
+
+```yaml
+- task: KID_TASK_A # Giữa task và tsm, task khác NULL nên tsm không thụt lùi
+  tsm: # Giữa tsm và id, tsm NULL nên id thụt lùi
+    - id: STATE_A_IDLE
+```
+
 ### Cấu trúc dữ liệu cơ bản
 
 #### Cặp Key-Value
@@ -37,9 +47,9 @@ Sử dụng dấu gạch ngang `-` kèm theo một khoảng trắng cho mỗi ph
 
 ```yaml
 signals:
-- SIG_START
-- SIG_STOP
-- SIG_TIMER
+  - SIG_START
+  - SIG_STOP
+  - SIG_TIMER
 ```
 
 #### Dictionaries / Nested Objects
@@ -185,6 +195,8 @@ Cần rewrite lại phần này tương ứng với các khối phát triển đ
 | PPLP | Cấu hình logging pipeline | `pplp -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
 | APE | Gọi urgent message / priority escalation | `escal -> trigger -> post_urgent` | `mode: slnf`, `mode: non-slnf`, `scope: self`, `keep_queue_order`, `extra_rounds`, `post_urgent` | `uedp_task_norm_post_urgent()`, `uedp_task_norm_set_urgent()` |
 | OCE | Service chạy ngoài luồng logic chính | `outexec -> name/handler/context/state` | `name`, `handler`, `context`, `state` | `ocesvc_register()`, `ocesvc_scheduler()` |
+
+Số lượng state trong `tsm`/`fsm` của mỗi `tnorm` (hàng Task Norm ở trên) khớp 1-1 với khai báo `APPCFG_TSM_TASK_{i}_STATE_{j}`/`APPCFG_FSM_TASK_{i}_STATE_{j}` do `kconfigspec.tnorm` sinh riêng cho từng task #i — xem mục "Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`" bên dưới.
 
 ### Các lưu ý chung
 
@@ -335,6 +347,16 @@ tlist:
 ```
 
 Trong current core, task poll chỉ nên dùng cho logic nhẹ, còn các tác vụ dọn dẹp hệ thống, flush log hoặc đồng bộ nền nên được đẩy sang OCE.
+
+### Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`
+
+Tầng khai báo Kconfig (`pltf/kconfigspec/usrinp.py` + `pltf/kconfigspec/tnorm.py`, sinh ra `sources/app/kconfig/decl.kconfig`) trước đây chỉ hỏi **một lần duy nhất** "Do you want to use FSM?" / "Do you want to use TSM?" kèm **một số lượng state dùng chung** cho toàn bộ `num_tasks_norm` task đã khai báo. Điều này không khớp với model μE-LS mô tả ở trên: mỗi `tnorm` trong `tlist` tự quyết định dùng `tsm` hay `fsm` (hoặc cả hai, hoặc không dùng cái nào), với số lượng state hoàn toàn độc lập theo độ dài mảng `tsm:`/`fsm:` khai báo riêng cho task đó.
+
+`kconfigspec.usrinp.user_input()` và `kconfigspec.tnorm.task_norm_declaration()` đã được sửa đổi để hỏi và sinh cấu hình **theo từng task**: với mỗi task #i (`i` từ 1 đến `num_tasks_norm`), người dùng được hỏi riêng có dùng FSM không, có dùng TSM không, và nếu có thì bao nhiêu state — kết quả trả về là 4 list (`fsm_flags`, `tsm_flags`, `num_fsm_states_list`, `num_tsm_states_list`), trong đó phần tử thứ `i - 1` ứng với task #i. `task_norm_declaration()` dùng đúng 4 list này để sinh `APPCFG_TSM_TASK_{i}`/`APPCFG_FSM_TASK_{i}` kèm các state con `_STATE_{j}`, với số lượng `j` riêng biệt cho từng task, thay vì dùng chung 1 số `num_tsm_states`/`num_fsm_states` cho tất cả task như bản cũ.
+
+Với PLD/μE-LS, thay đổi này có ý nghĩa: dữ liệu `task_tsm`/`task_fsm` mà `dotcfg_cfp.py` build từ `.config` (xem `pltf-design.md` mục 3.3) giờ có thể ánh xạ 1-1 với độ dài mảng `tsm:`/`fsm:` của từng `tnorm` trong `tlist`, không còn bị giới hạn "cả hệ thống chỉ có 1 số lượng state chung" như trước — một task hoàn toàn có thể vừa dùng TSM vừa dùng FSM cùng lúc (hoặc không dùng cái nào), với số state khác hẳn task còn lại, mà không ảnh hưởng tới phần khai báo của các task khác trong cùng `decl.kconfig`. Đây là điều kiện cần để pipeline sinh code từ μE-LS (xem mục 3.5 `pltf-design.md`, μE-LS Codegen) có thể đọc đúng số lượng state khai báo trong YAML mà không còn bị giới hạn bởi 1 con số cấu hình chung ở tầng Kconfig như trước.
+
+Lưu ý: `kconfigspec` chỉ sinh khung khai báo tên (`APPCFG_TSM_TASK_{i}`, `APPCFG_TSM_TASK_{i}_STATE_{j}`, `APPCFG_FSM_TASK_{i}`, `APPCFG_FSM_TASK_{i}_STATE_{j}`, ...) ở tầng Kconfig — nội dung logic thật của từng state (`trans`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`) vẫn đến hoàn toàn từ khai báo `tsm:`/`fsm:` trong μE-LS, không phải từ Kconfig.
 
 ### PPLP - Cấu hình logging pipeline
 
@@ -557,73 +579,73 @@ tlist:
   tsm:
   - id: STATE_USR_IDLE
     trans:
-    - sig: SIG_START
-      goto: STATE_USR_RUN
+      - sig: SIG_START
+        goto: STATE_USR_RUN
     on_ntry: NULL
     on_actv: NULL
     on_exit: NULL
   - id: STATE_USR_RUN
     trans:
-    - sig: SIG_STOP
-      goto: STATE_USR_IDLE
+      - sig: SIG_STOP
+        goto: STATE_USR_IDLE
     on_ntry:
       steps:
-      - actv: post_msg
-        to: KID_TASK_A
-        sig: SIG_A
-        data: NULL
+        - actv: post_msg
+          to: KID_TASK_A
+          sig: SIG_A
+          data: NULL
     on_actv:
       steps:
-      - actv: log
-        to: KID_TASK_USR
-        sig: SIG_LOG
-        data: "Task is running"
+        - actv: log
+          to: KID_TASK_USR
+          sig: SIG_LOG
+          data: "Task is running"
     on_exit:
       steps:
-      - actv: log
-        to: KID_TASK_USR
-        sig: SIG_LOG
-        data: "Task is stopping"
+        - actv: log
+          to: KID_TASK_USR
+          sig: SIG_LOG
+          data: "Task is stopping"
 - tnorm: KID_TASK_A
   fsm:
   - id: STATE_A_IDLE
     on_recv:
-    - sig: SIG_A
-      goto: STATE_A_BUSY
-      steps:
-      - actv: post_msg
-        to: KID_TASK_B
-        sig: SIG_B
-        data: NULL
+      - sig: SIG_A
+        goto: STATE_A_BUSY
+        steps:
+          - actv: post_msg
+            to: KID_TASK_B
+            sig: SIG_B
+            data: NULL
   - id: STATE_A_BUSY
     on_recv:
-    - sig: SIG_B
-      goto: STATE_A_IDLE
-      steps:
-      - actv: post_msg
-        to: KID_TASK_USR
-        sig: SIG_DONE
-        data: NULL
+      - sig: SIG_B
+        goto: STATE_A_IDLE
+        steps:
+          - actv: post_msg
+            to: KID_TASK_USR
+            sig: SIG_DONE
+            data: NULL
 - tnorm: KID_TASK_SIMPLE
   exec:
-  - on_sig: SIG_SIMPLE
-    steps:
-    - actv: post_msg
-      to: KID_TASK_A
-      sig: SIG_A
-      data: NULL
+    - on_sig: SIG_SIMPLE
+      steps:
+        - actv: post_msg
+          to: KID_TASK_A
+          sig: SIG_A
+          data: NULL
 
 - tpoll: KID_TASK_POLL
   exec:
-  - actv: poll_led
-    to: NULL
-    sig: NULL
-    data: NULL
+    - actv: poll_led
+      to: NULL
+      sig: NULL
+      data: NULL
 
 isr:
-- id: KID_ISR_TIMER
-  to: KID_TASK_TIM
-  sig: KID_SIG_TIM_TICK
+  - id: KID_ISR_TIMER
+    to: KID_TASK_TIM
+    sig: KID_SIG_TIM_TICK
 
 pplp:
   itnlog:
@@ -656,10 +678,10 @@ escal:
       data: NULL
 
 outexec:
-- name: OCE_ITNLOG_DUMP
-  handler: itnlog_dump
-  context: pplp_ctx
-  state: READY
+  - name: OCE_ITNLOG_DUMP
+    handler: itnlog_dump
+    context: pplp_ctx
+    state: READY
 ```
 
 ### Phân biệt `act`, `actv` và `steps`
@@ -707,7 +729,9 @@ Không được dùng `data` để chứa danh sách tham số của một funct
 
 `c_stmt` và `c_call` được giữ nguyên để codegen nhưng không có semantic validation sâu như `post_msg`. Generator phải reject hoặc báo rõ khi built-in action thiếu tham số bắt buộc. Alias phải được resolve trước khi mapping; không dùng alias đã bị `safe_load()` chuyển thành `None` làm payload hợp lệ.
 
-Lưu ý rằng ở thời điểm hiện `args` chưa hỗ trợ để resolve alias trong danh sách, nên cần tránh dùng alias trong `args` nếu không muốn gặp lỗi runtime. Ngoài ra, trong cấu trúc sử dụng mapping action với `c_stmt` và `c_call` cần đảm bảo tag `kind`, `function`, và `args` được khai báo với indent lùi vào sau `actv` để tránh lỗi YAML. Các trường hợp này cần được kiểm tra kỹ lưỡng trong quá trình codegen để đảm bảo tính nhất quán và tránh lỗi runtime.
+Lưu ý rằng ở thời điểm hiện `args` chưa hỗ trợ để resolve alias trong danh sách, nên cần tránh dùng alias trong `args` nếu không muốn gặp lỗi runtime.
+
+Ngoài ra, trong cấu trúc sử dụng mapping action với `c_stmt` và `c_call` cần đảm bảo tag `kind`, `function`, và `args` được khai báo với indent lùi vào sau `actv` để tránh lỗi YAML. Các trường hợp này cần được kiểm tra kỹ lưỡng trong quá trình codegen để đảm bảo tính nhất quán và tránh lỗi runtime.
 
 <!-- TODO
 100826 - Cân nhắc thay đổi 2 keyword `act` và `actv` để tránh nhầm lẫn.

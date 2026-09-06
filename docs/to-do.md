@@ -207,9 +207,11 @@ Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiệ
 -->
 
 - [x] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA. //NOTE - Ở task, yêu cầu cụ thể là sửa đổi tài liệu tương ứng.
-- [ ] Sửa đổi và cập nhật thiết kế PLD/μE-LS tương ứng với sự thay đổi của kconfigspec.usrinp và kconfigspec.tnorm //NOTE - Ở task này, yêu cầu cụ thể là bổ sung sửa đổi tài liệu tương ứng.
-- [ ] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
-- [ ] Bổ sung phiên bản tiếng anh của `user-manual` để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
+- [x] Sửa đổi và cập nhật thiết kế PLD/μE-LS tương ứng với sự thay đổi của kconfigspec.usrinp và kconfigspec.tnorm //NOTE - Ở task này, yêu cầu cụ thể là bổ sung sửa đổi tài liệu tương ứng.
+- [x] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
+- [x] Bổ sung phiên bản tiếng anh của `user-manual` để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
+- [ ] Bổ sung sửa đổi tài liệu thiết kế PLTF bản EN và VN. //NOTE - Ở task này là kiểm tra sửa đổi tài liệu thiết kế PLTF bản EN và VN theo các thay đổi về module name và thiết kế logic của các module.
+- [ ] Kiểm tra lại các thay đổi mới trong tài liệu cú pháp sau hiệu chỉnh của bên nhánh chore để đảm bảo documentation và source code được đồng bộ và nhất quán. //NOTE - Follow theo commit số `bab87c3dece35ccfcb71888f1086b1c45fa0b4f7` của nhánh chore.
 - [ ] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [ ] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
@@ -238,6 +240,13 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 //NOTE - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
 
 - [ ] Ra mắt phiên bản 1.1.6 của lõi μEDP với đầy đủ tính năng PLD/μE-LS, Pub/Sub engine và tài liệu hướng dẫn sử dụng.
+
+//  !SECTION
+
+//  SECTION - v1.1.7 & v1.1.8
+
+- [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8. //TASK - Đã thống nhất đưa vào lộ trình phát triển của phiên bản 1.1.7
+- [ ] Bổ sung khả năng phân giải pplp vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8. //TASK - Đã thống nhất đưa vào lộ trình phát triển của phiên bản 1.1.7
 
 //  !SECTION
 
@@ -282,6 +291,9 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 
 <!-- REVIEW
 1. Bổ sung cân nhắc phân tách PLD/μE-LS thành SA (semi-automation) và FA (full-automation) trên 2 phiên bản 1.1.7, 1.1.8 hay 1.1.8, 1.1.9.
+
+# STATUS - PLD/μE-LS đã hoàn thiện triển khai FA nên không cần phân tách SA/FA nữa.
+
 2. Cân nhắc đưa triển khai kết quả sau khi cleanup NULL vào pydantic model để chuẩn hóa toàn bộ logic triển khai trước khi translate thành mã C.
 3. Cần review lại thiết kế cú pháp ở khu vực data để quản lý chi tiết vấn đề chuyển data-as-parameter thành data-as-global đối với các tham số truyền vào có sizeof() hoặc length nặng hoặc multiple param trong 1 function call.
 -->
@@ -293,10 +305,47 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Sửa đổi vị trí ustab.custab trong pipeline trên entrypoint.sh nằm giữa jnerator.pregen.fpregen và jnerator.postgen.cgen. //CRITICAL - Follow theo task bên dưới sẽ đưa ustab.custab nằm cuối pipeline.
 - [x] Phân tách entrypoint.sh để đưa jnerator.postgen.cgen và lstaxer.vlid vào jainerator.sh thành một pipeline riêng biệt.
 - [x] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing. //CRITICAL - Xem xét loại bỏ khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
-- [ ] Bổ sung khả năng kiểm tra theo syntax mới của PLD/μE-LS trên lstaxer.vlid.
-- [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax.
-- [ ] Bổ sung sửa đổi tài liệu thiết kế PLTF.
-- [ ] Kiểm tra lại các thay đổi mới trong tài liệu cú pháp sau hiệu chỉnh của bên nhánh chore để đảm bảo documentation và source code được đồng bộ và nhất quán. //NOTE - Follow theo commit số `bab87c3dece35ccfcb71888f1086b1c45fa0b4f7` của nhánh chore.
+
+<!-- STATUS
+Đã remove lstaxer.nullremov khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+-->
+
+- [x] Bổ sung khả năng kiểm tra theo syntax mới của PLD/μE-LS trên lstaxer.vlid.
+- [x] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin đưa vào phiên bản 1.1.7 hoặc 1.1.8 để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
+
+<!-- SECTION - Idea cho remote-file alias
+# NOTE - bên nhánh chore vừa bổ sung hiệu chỉnh về tên gọi nên kiểm tra xem breaking change có xảy ra hay không. Nếu có thì cần cân nhắc sửa đổi lại tên gọi để tránh xung đột với các triển khai hiện tại.
+# LINK docs/uels-syntax.md:118
+# LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:5
+# LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:706
+
+Dựa trên triển khai và kết quả trả về của yaml.parse(), Event sẽ hỗ trợ việc get/set parameter như anchor với `MappingStartEvent(anchor='tnorm1-ctrl', tag=None, implicit=True)` khi trước đó chúng ta gặp các ScalarEvent như `ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'`. 
+
+Tuy nhiên file inclusion của YAML chỉ đảm bảo việc thêm vào chứ không hề đảm bảo việc remote-alias từ file khác.
+Vì vậy, một ràng buộc chủ chốt phải có chính là thực hiện write toàn bộ file A với alias vào file B trước khi thực hiện bất kỳ thay đổi nào trên file B.
+
+Ngoài ra, hiện tại trong thiết kế của lstaxer.ustab sẽ sinh ra các incremental indexed item dạng '1', '2', '3', ... để phục vụ việc mapping các anchor và alias.
+
+Do đó, một ý tưởng có thể cân nhắc chính là:
+
+Khi chúng ta có 1 file A cần remote-alias từ file B:
+1. Chúng ta thực hiện parse file A để trích xuất event và xác định các incremental indexed item cần thiết.
+2. Chúng ta thực hiện gắn anchor vào các MappingStartEvent vào sau các ScalarEvent có value là incremental indexed item.
+3. Chúng ta thực hiện yaml.dump lại chính EventStream này vào chính file A để cập nhật các anchor và alias.
+4. Chúng ta thực hiện write toàn bộ file A với alias vào file B trước khi thực hiện bất kỳ thay đổi nào trên file B.
+
+# STATUS - Tuy nhiên, ở thời điểm hiện tại chưa có kiểm tra lại tính khả thi này nên ustab.ankorpin sẽ chưa được triển khai trước khi có kết quả kiểm tra khả thi. Nếu kết quả kiểm tra khả thi thì sẽ bổ sung ustab.ankorpin vào sau phiên bản 1.1.6 khi pipeline được chuẩn hóa và hoàn thiện hơn.
+
+# STATUS - Đã hoàn thiện và kiểm tra trên testobj, có thể đưa vào pipeline. Cần cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8.
+
+# !SECTION
+-->
+
+- [x] Hoàn thiện thiết kế lstaxer.ankorpin để hỗ trợ việc tự động gán anchor cho các tag trong YAML, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP. //STATUS - Đã hoàn thiện thiết kế và kiểm tra, có thể đưa vào pipeline.
+- [x] Revert lại các PAL để làm testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Sửa đổi thiết kế CMakeList.txt để hỗ trợ việc build các testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Remove postfix `arch` trong tên gọi của các testobj để giảm sự dư thừa và tăng tính nhất quán trong việc đặt tên các module trong dự án μEDP.
+- [ ] Bổ sung và hoàn thiện PAL cho 2 testobj STM32H723 và ESP32S3 với API hoàn thiện để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- STATUS
@@ -326,32 +375,9 @@ Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đ�
 -->
 
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
-- [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin đưa vào phiên bản 1.1.7 hoặc 1.1.8 để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
 
-<!-- SECTION - Idea cho remote-file alias
-# NOTE - bên nhánh chore vừa bổ sung hiệu chỉnh về tên gọi nên kiểm tra xem breaking change có xảy ra hay không. Nếu có thì cần cân nhắc sửa đổi lại tên gọi để tránh xung đột với các triển khai hiện tại.
-# LINK docs/uels-syntax.md:118
-# LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:5
-# LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:706
-
-Dựa trên triển khai và kết quả trả về của yaml.parse(), Event sẽ hỗ trợ việc get/set parameter như anchor với `MappingStartEvent(anchor='tnorm1-ctrl', tag=None, implicit=True)` khi trước đó chúng ta gặp các ScalarEvent như `ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'`. 
-
-Tuy nhiên file inclusion của YAML chỉ đảm bảo việc thêm vào chứ không hề đảm bảo việc remote-alias từ file khác.
-Vì vậy, một ràng buộc chủ chốt phải có chính là thực hiện write toàn bộ file A với alias vào file B trước khi thực hiện bất kỳ thay đổi nào trên file B.
-
-Ngoài ra, hiện tại trong thiết kế của lstaxer.ustab sẽ sinh ra các incremental indexed item dạng '1', '2', '3', ... để phục vụ việc mapping các anchor và alias.
-
-Do đó, một ý tưởng có thể cân nhắc chính là:
-
-Khi chúng ta có 1 file A cần remote-alias từ file B:
-1. Chúng ta thực hiện parse file A để trích xuất event và xác định các incremental indexed item cần thiết.
-2. Chúng ta thực hiện gắn anchor vào các MappingStartEvent vào sau các ScalarEvent có value là incremental indexed item.
-3. Chúng ta thực hiện yaml.dump lại chính EventStream này vào chính file A để cập nhật các anchor và alias.
-4. Chúng ta thực hiện write toàn bộ file A với alias vào file B trước khi thực hiện bất kỳ thay đổi nào trên file B.
-
-# STATUS - Tuy nhiên, ở thời điểm hiện tại chưa có kiểm tra lại tính khả thi này nên ustab.ankorpin sẽ chưa được triển khai trước khi có kết quả kiểm tra khả thi. Nếu kết quả kiểm tra khả thi thì sẽ bổ sung ustab.ankorpin vào sau phiên bản 1.1.6 khi pipeline được chuẩn hóa và hoàn thiện hơn.
-
-# !SECTION
+<!-- STATUS
+Loại bỏ task bên trên do tính năng file inclusion là tính năng specific của PyYAML, ruamel.yaml và không phải là tính năng chuẩn của YAML. Do đó, việc triển khai remote-file alias sẽ không được hỗ trợ trong các phiên bản hiện tại của μE-LS.
 -->
 
 - [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
