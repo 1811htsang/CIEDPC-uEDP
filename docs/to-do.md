@@ -342,7 +342,10 @@ Khi chúng ta có 1 file A cần remote-alias từ file B:
 -->
 
 - [x] Hoàn thiện thiết kế lstaxer.ankorpin để hỗ trợ việc tự động gán anchor cho các tag trong YAML, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP. //STATUS - Đã hoàn thiện thiết kế và kiểm tra, có thể đưa vào pipeline.
-- [ ] Revert lại các PAL để làm testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Revert lại các PAL để làm testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Sửa đổi thiết kế CMakeList.txt để hỗ trợ việc build các testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Remove postfix `arch` trong tên gọi của các testobj để giảm sự dư thừa và tăng tính nhất quán trong việc đặt tên các module trong dự án μEDP.
+- [ ] Bổ sung và hoàn thiện PAL cho 2 testobj STM32H723 và ESP32S3 với API hoàn thiện để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- STATUS
