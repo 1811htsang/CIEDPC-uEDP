@@ -91,3 +91,5 @@ config.yaml
 
 # Nogic extension database
 .nogic/*
+build/*
+!build/README.md
