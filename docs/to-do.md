@@ -378,7 +378,7 @@ Chờ BST trên phần cứng thật để kiểm tra khả năng sinh code và 
 Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đọng của PLD/μE-LS để bắt đầu rebase các task thuộc về phiên bản 1.2.0 sang các phiên bản 1.1.7, 1.1.8, 1.1.9 để hoàn thiện các submodule cơ sở hạ tầng được dự trù trong phiên bản 1.2.0, bao gồm các tính năng PLTF.TSD/TLC.
 -->
 
-- [ ] Kiểm tra chi tiết kết quả BST của vir-testobj Linux với GDB để kiểm tra các khả năng lỗi có thể xảy ra.
+- [x] Kiểm tra chi tiết kết quả BST của vir-testobj Linux với GDB để kiểm tra các khả năng lỗi có thể xảy ra.
 
 <!-- STATUS
 Theo kết quả chạy từ GDB và kiểm tra logic TSM/FSM của Core:
@@ -413,6 +413,8 @@ Một nghi ngờ kéo theo chính là khả năng phải sửa đổi triển kh
 lstaxer.kre8 và jnerator.postgen.
 -->
 
+- [ ] Sửa đổi logic-testobj của A và USR với thiết kế syntax tối ưu hơn cho multiline để vượt qua rào cản của actv-obj gốc.
+- [ ] Cân nhắc remove actv-obj trong toàn bộ thiết kế do sự thiếu xót trong review logic-testobj và thiết kế HSMC gốc. //NOTE - Nhớ bổ sung thiết kế từ giấy nháp vào markdown để review lại trước khi quyết định remove actv-obj trong toàn bộ thiết kế.
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên phy-testobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 
