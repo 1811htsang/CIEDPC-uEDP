@@ -379,6 +379,40 @@ Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đ�
 -->
 
 - [ ] Kiểm tra chi tiết kết quả BST của vir-testobj Linux với GDB để kiểm tra các khả năng lỗi có thể xảy ra.
+
+<!-- STATUS
+Theo kết quả chạy từ GDB và kiểm tra logic TSM/FSM của Core:
+
+- uedp_tsm_trans tác động lên on_exit và on_ntry
+- uedp_tsm_dispatch tác động lên on_actv
+
+Khi thực hiện chạy ở sequence đầu tiên thì được kết quả như sau 
+
+```c
+[USR][IDLE][NTRY]: System initialized. Ready to start sequence.
+[TASK_NORM_A][IDLE][NTRY]: Task initialized. Ready to receive messages.
+[USR][IDLE][ONST]: Posted SIG_USR_START to TASK_NORM_A.
+[USR][IDLE][EXIT]: Sequence completed. Transitioning to RUNNING state.
+[USR][RUNNING][NTRY]: Sequence started. Waiting for TASK_NORM_A to complete its operations.
+[TASK_NORM_A][IDLE][EXIT]: Exiting IDLE state. Transitioning to WAITING state.
+[TASK_NORM_A][WAITING][NTRY]: Posted SIG_0x12 to TASK_NORM_B.
+[TASK_NORM_B][IDLE][ONST]: Received SIG_0x12 in IDLE state.
+[TASK_NORM_B][IDLE][ONST]: Posted SIG_0x34 to TASK_NORM_A with GDA_SYSTEM_STATUS data.
+[TASK_NORM_B][IDLE][ONST]: Posted SIG_0xFF to TASK_NORM_A with GDA_SYSTEM_STATUS data.
+```
+
+Đây là chuỗi sequence gần đúng khi A đáng ra phải trả về 1 lần 0xAA cho B, tuy chúng lại lặp tận 2 lần. 
+Có thể nghi ngờ đến việc do logic thiếu trong logic-testobj của A và USR 
+dẫn đến việc A tự gọi chính fn_on_actv của mình 2 lần, dẫn đến việc B nhận 2 lần 0xAA.
+Theo đó dẫn đến việc USR tự gọi lại SIG_USR_START cho A lần kế tiếp, tiếp tục lại 
+kịch bản sequence trên.
+
+Do đó, có thể kết luận xảy ra chính là Logic-testobj của A và USR chưa hoàn thiện.
+Hệ quả dẫn đến lstaxer.kre8 và jnerator.postgen sinh ra code sai.
+Một nghi ngờ kéo theo chính là khả năng phải sửa đổi triển khai của cả 2
+lstaxer.kre8 và jnerator.postgen.
+-->
+
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên phy-testobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 
