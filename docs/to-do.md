@@ -345,8 +345,8 @@ Khi chúng ta có 1 file A cần remote-alias từ file B:
 - [x] Revert lại các PAL để làm testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [x] Sửa đổi thiết kế CMakeList.txt để hỗ trợ việc build các testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [x] Remove postfix `arch` trong tên gọi của các testobj để giảm sự dư thừa và tăng tính nhất quán trong việc đặt tên các module trong dự án μEDP.
-- [ ] Bổ sung và hoàn thiện PAL cho 2 testobj STM32H723 và ESP32S3 với API hoàn thiện để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
-- [ ] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Bổ sung và hoàn thiện PAL cho 2 testobj STM32H723 và ESP32S3 với API hoàn thiện để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- STATUS
 Trong thiết kế trước đó:
@@ -368,12 +368,18 @@ Một số vấn đề còn tồn đọng:
 Đã giải quyết vấn đề 1 với việc sửa đổi trong template nhưng chưa hoàn toàn ưng ý, có thể cân nhắc sửa đổi lại thêm.
 
 Đã giải quyết vấn đề 2 với việc loại bỏ lstaxer.nullremov khỏi pipeline chung của PLD/μE-LS do lo ngại về phá vỡ cấu trúc và tăng phức tạp xử lý khi parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+
+Đã thực hiện triển khai trên vir-testobj Linux nhưng kết quả có nghi vấn, cần kiểm tra sâu với GDB.
+
+Chờ BST trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 -->
 
 <!-- NOTE - Expectation for pipeline
 Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đọng của PLD/μE-LS để bắt đầu rebase các task thuộc về phiên bản 1.2.0 sang các phiên bản 1.1.7, 1.1.8, 1.1.9 để hoàn thiện các submodule cơ sở hạ tầng được dự trù trong phiên bản 1.2.0, bao gồm các tính năng PLTF.TSD/TLC.
 -->
 
+- [ ] Kiểm tra chi tiết kết quả BST của vir-testobj Linux với GDB để kiểm tra các khả năng lỗi có thể xảy ra.
+- [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên phy-testobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 
 <!-- STATUS
