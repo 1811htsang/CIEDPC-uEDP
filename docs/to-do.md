@@ -416,7 +416,7 @@ lstaxer.kre8 và jnerator.postgen.
 - [x] Sửa đổi logic-testobj của A và USR với thiết kế syntax tối ưu hơn cho multiline để vượt qua rào cản của actv-obj gốc.
 - [x] Cân nhắc remove actv-obj-post trong toàn bộ thiết kế do sự thiếu xót trong review logic-testobj và thiết kế HSMC gốc.
 
-<!-- STATUS
+<!-- SECTION - actv-obj-post removal task
 Theo kết quả kiểm tra trước đó và các kết luận từ việc review logic-testobj và thiết kế HSMC gốc
 
 Ở thời điểm hiện tại sau khi sửa chữa toàn bộ logic-testobj của A và USR với thiết kế syntax tối ưu hơn cho multiline
@@ -441,14 +441,17 @@ Kết luận 2 chính là phải remove toàn bộ syntax actv-obj-post trong th
 1. Giảm thiểu các vấn đề tương thích với các API khác trong lõi μEDP, giúp người dùng tùy ý bổ sung các điều kiện ràng buộc hay các logic phức tạp tại một thời điểm
 2. Đảm bảo giảm tải độ phức tạp của syntax μE-LS và mã nguồn kconfigspec, pycdscriptor.
 
+// STATUS - Đã hoàn thành, chưa sửa đổi trên tài liệu thiết kế.
+
 Ngoài ra, một lưu ý thứ 3 cần đề cập:
 
 //NOTE - Nhớ bổ sung thiết kế từ giấy nháp vào markdown để làm tài liệu tổng hợp thiết kế của HSMC và quy trình hướng dẫn xây dựng logic-testobj trên test và product-in-use.
 
+// !SECTION
 -->
 
+- [x] Remove toàn bộ syntax actv-obj-post trong thiết kế syntax gốc và giữ c_call hoặc c_stmt cho người sử dụng để giảm thiểu các vấn đề tương thích với các API khác trong lõi μEDP.
 - [ ] Bổ sung tài liệu hướng dẫn thiết kế logic-testobj trên test và product-in-use để tránh các vấn đề hiểu sai logic thực thi trong tương lai ở cả mặt test lẫn product-in-use.
-- [ ] Remove toàn bộ syntax actv-obj-post trong thiết kế syntax gốc và giữ c_call hoặc c_stmt cho người sử dụng để giảm thiểu các vấn đề tương thích với các API khác trong lõi μEDP.
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên phy-testobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 
