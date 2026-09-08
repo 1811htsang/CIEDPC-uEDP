@@ -189,53 +189,18 @@ Cần rewrite lại phần này tương ứng với các khối phát triển đ
 
 | Khối | Ý nghĩa | Syntax chính | Syntax phụ / tùy chỉnh | Core mapping |
 | --- | --- | --- | --- | --- |
-| Task Norm | Task có trạng thái hoặc xử lý message | `tlist -> tnorm -> tsm/fsm/exec/escal` | `tsm`, `fsm`, `exec`, `escal`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps` | `uedp_task_norm_create()`, `uedp_task_norm_post_msg()` |
-| Task Poll | Task vòng lặp nhẹ, không theo message | `tlist -> tpoll -> exec` | `exec`, `steps`, `actv`, `to`, `sig`, `data`, `ability` | `uedp_task_poll_create()`, `uedp_task_poll_set_ability()` |
+| Task Norm | Task có trạng thái hoặc xử lý message | `tlist -> tnorm -> tsm/fsm/exec/escal` | `tsm`, `fsm`, `exec`, `escal`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`, [`actv`, `kind`, `code`, `func`, `args`] | `uedp_task_norm_create()`, `uedp_task_norm_post_msg()` |
+| Task Poll | Task vòng lặp nhẹ, không theo message | `tlist -> tpoll -> exec` | `exec`, `steps`, [`actv`, `kind`, `code`, `func`, `args`], `ability` | `uedp_task_poll_create()`, `uedp_task_poll_set_ability()` |
 | SII | Đưa signal từ ISR vào hệ thống | `isr -> to/sig` | `to`, `sig` | `uedp_task_norm_post_isr()`, `uedp_msg_drain_isr_pool()` |
 | PPLP | Cấu hình logging pipeline | `pplp -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
 | APE | Gọi urgent message / priority escalation | `escal -> trigger -> post_urgent` | `mode: slnf`, `mode: non-slnf`, `scope: self`, `keep_queue_order`, `extra_rounds`, `post_urgent` | `uedp_task_norm_post_urgent()`, `uedp_task_norm_set_urgent()` |
 | OCE | Service chạy ngoài luồng logic chính | `outexec -> name/handler/context/state` | `name`, `handler`, `context`, `state` | `ocesvc_register()`, `ocesvc_scheduler()` |
 
-Số lượng state trong `tsm`/`fsm` của mỗi `tnorm` (hàng Task Norm ở trên) khớp 1-1 với khai báo `APPCFG_TSM_TASK_{i}_STATE_{j}`/`APPCFG_FSM_TASK_{i}_STATE_{j}` do `kconfigspec.tnorm` sinh riêng cho từng task #i — xem mục "Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`" bên dưới.
-
-### Các lưu ý chung
-
-Nếu tính năng không sử dụng thì set giá trị đi kèm là `NULL` hoặc bỏ qua. Điều này áp dụng đối với các tính năng như:
-
-- PPLP.
-- APE.
-- ISR.
-- OCE.
-- TSM (on_ntry, on_actv, on_exit).
-
-<!-- TODO
-Cần kiểm tra các trường hợp đặc biệt trong cú pháp để xử lý thành các bug-fix release.
--->
-
-<!-- NOTE
-Đưa cho Minh kiểm tra phần này với source code hiện tại để đảm bảo rằng cú pháp μE-LS khớp với core API và các ví dụ test hiện tại. Nếu có sự khác biệt, cần ghi chú rõ ràng trong tài liệu để thực hiện bổ sung bug-fix.
--->
-
-### Đánh giá so với source code hiện tại
-
-Kết luận đối chiếu với core source và pycdscriptor hiện tại là: syntax đang dùng trong tài liệu phải giữ nguyên theo trục `on_ntry`, `on_actv`, `actv`, `steps`, `on_recv`, vì đây mới là shape mà generator và ví dụ test hiện tại đang bám vào. Các đề xuất như `on_entry`, `on_active`, `action`, `guard`, hay `data_kind: VALUE/REF` là hợp lý về mặt UX, nhưng hiện mới ở mức đề xuất mở rộng, chưa nên ghi như syntax chính thức của pre-1.2.0.
-
-| Đề xuất | Đánh giá theo source | Hành động trên tài liệu |
-| --- | --- | --- |
-| `on_entry` / `on_active` | Chưa có trong pycdscriptor và generator hiện tại vẫn dùng `on_ntry` / `on_actv` | Giữ keyword hiện tại là chính thức, có thể ghi thêm alias đề xuất ở ghi chú |
-| `action` thay cho `actv` | Core ví dụ và parser hiện tại vẫn dùng `actv` | Không đổi syntax chính, chỉ có thể nhắc đây là tên gợi nhớ cho UX tương lai |
-| `guard` trong `trans` | Chưa thấy support ở core TSM/FSM hiện tại | Ghi là hướng mở rộng, không đưa vào grammar chính thức |
-| `data_kind: VALUE/REF` cho `post_msg` | Core đã có D2MP và API `uedp_msg_set_data_val/ref`, nhưng chưa có trường PLD tương ứng | Mô tả ở phần mở rộng/D2MP, không coi là field bắt buộc của μE-LS hiện tại |
-| APE local theo từng tnorm | Khớp với source: mỗi tnorm có `urgent_pending`, `base_pri`, `cur_pri` và API `set_urgent/post_urgent` | Giữ nguyên và nhấn mạnh là khai báo cục bộ theo task |
-| `exec` và `on_recv` | Không trùng nghĩa: `exec` là hành vi phẳng, `on_recv` là dispatch của FSM | Giữ tách biệt để bảo toàn mô hình hiện tại |
-
-Từ đánh giá này, hành động cần làm trên tài liệu là:
-
-1. Giữ syntax hiện tại làm chuẩn chính thức.
-2. Thêm ghi chú rõ ràng cho các alias / trường mở rộng chỉ ở mức định hướng
-3. Không nâng các field UX mới thành grammar bắt buộc nếu chưa có support trong parser và generator.
+Số lượng state trong `tsm`/`fsm` của mỗi `tnorm` (hàng Task Norm ở trên) khớp 1-1 với khai báo `APPCFG_TSM_TASK_{i}_STATE_{j}`/`APPCFG_FSM_TASK_{i}_STATE_{j}` do `kconfigspec.tnorm` và `kconfigspec.usrinp` sinh riêng cho từng task #i — xem mục "Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`" bên dưới.
 
 ### Task - Tác vụ
+
+Identifier trong tài liệu là `process-syntax` để thuận tiện cho việc đề cập nội dung.
 
 Trong μE-LS, mỗi task được khai báo trong danh sách `tlist`. Một task có thể đi theo một trong ba nhánh chính: `tsm` nếu cần state machine dạng bảng, `fsm` nếu cần dispatch theo handler, hoặc `exec` nếu chỉ cần hành vi tuyến tính hoặc lặp lại.
 
@@ -248,117 +213,117 @@ Về tổng quát, một task Norm nên được viết theo cấu trúc sau:
 ```yaml
 project: "uEDP"
 tlist:
-- task: KID_TASK_USR
-  tsm:
-  - id: STATE_USR_IDLE
-    trans:
-    - sig: KID_SIG_USR_START
-      goto: STATE_USR_WAITING
-    on_ntry: NULL
-    on_actv: NULL
-    on_exit: NULL
-  - id: STATE_USR_WAITING
-    trans:
-    - sig: KID_SIG_USR_STOP
-      goto: STATE_USR_IDLE
-    on_ntry:
-      steps:
-      - actv: post_msg
-        to: KID_TASK_A
-        sig: KID_SIG_USR_START
-        data: NULL
-    on_actv:
-      steps:
-      - actv: log
-        to: KID_TASK_USR
-        sig: KID_SIG_LOG
-        data: "System Task USR: Waiting for STOP signal..."
-    on_exit:
-      steps:
-      - actv: log
-        to: KID_TASK_USR
-        sig: KID_SIG_LOG
-        data: "System Task USR: Sequence Finished."
+  - tnorm: TASK_USR
+    tsm:
+      - id: STATE_USR_IDLE
+        trans:
+          - sig: KID_SIG_USR_START
+            goto: STATE_USR_WAITING
+        on_ntry: NULL # Có thể NULL
+        on_actv: NULL
+        on_exit: NULL
+      - id: STATE_USR_WAITING
+        trans:
+          - sig: KID_SIG_USR_STOP
+            goto: STATE_USR_IDLE
+        on_ntry:
+          steps:
+            - actv:
+                kind: c_call
+                function: printf
+                args: ['"[System Task USR] Received START signal, entering WAITING state."']
+        on_actv:
+          steps:
+            - actv: 
+                kind: c_stmt
+                code: |
+                  // Logic xử lý trong trạng thái WAITING
+                  printf("[System Task USR] Processing in WAITING state.\n");
+                  for (int i = 0; i < 5; i++) {
+                    printf("[System Task USR] Loop iteration %d\n", i);
+                  }
+        on_exit: NULL
 ```
 
-`tsm` nên được dùng khi task cần quản lý vòng đời trạng thái rõ ràng và có thể sinh ra `on_entry`, `on_exit` và `on_active` ở tầng codegen. `fsm` nên được dùng khi task chỉ cần dispatch theo tín hiệu với state handler trực tiếp.
+`tsm` nên được dùng khi `tnorm` cần quản lý vòng đời trạng thái rõ ràng và có thể sinh ra `on_entry`, `on_exit` và `on_active` tự động bởi `pycdscriptor`.
+
+`fsm` nên được dùng khi `tnorm` chỉ cần dispatch theo tín hiệu với state handler trực tiếp hoặc có thể lồng vào TSM để xử lý các hành vi phức tạp hơn.
 
 Ví dụ FSM nên viết theo kiểu sau:
 
 ```yaml
 project: "uEDP"
 tlist:
-- tnorm: KID_TASK_B
-  fsm:
-  - id: STATE_B_IDLE
-    on_recv:
-    - sig: KID_SIG_0x12
-      goto: STATE_B_BUSY
-      steps:
-      - actv: post_msg
-        to: KID_TASK_A
-        sig: KID_SIG_0x34
-        data: NULL
-      - actv: post_msg
-        to: KID_TASK_A
-        sig: KID_SIG_0xFF
-        data: NULL
-  - id: STATE_B_BUSY
-    on_recv:
-    - sig: KID_SIG_0xAA
-      goto: STATE_B_IDLE
-      steps:
-        actv: post_msg
-        to: KID_TASK_USR
-        sig: KID_SIG_USR_STOP
-        data: NULL
+  - tnorm: KID_TASK_B
+    fsm:
+      - id: STATE_B_IDLE
+        on_recv:
+          - sig: KID_SIG_0x12
+            goto: STATE_B_BUSY
+            steps:
+              - actv: 
+                  kind: c_call
+                  function: printf
+                  args: ['"[Task B] Received SIG_0x12, transitioning to BUSY state."']
+              - actv: 
+                  kind: c_stmt
+                  code: |
+                    // Logic xử lý trong trạng thái BUSY
+                    printf("[Task B] Processing in BUSY state.\n");
+                    for (int i = 0; i < 3; i++) {
+                      printf("[Task B] BUSY loop iteration %d\n", i);
+                    }
+      - id: STATE_B_BUSY
+        on_recv:
+          - sig: KID_SIG_0xAA
+            goto: STATE_B_IDLE
+            steps:
+              - actv: 
+                  kind: c_call
+                  function: printf
+                  args: ['"[Task B] Received SIG_0xAA, transitioning back to IDLE state."']
 ```
 
-Nếu một task không cần TSM/FSM thì dùng `exec` để mô tả các hành vi tuyến tính. Đây là lựa chọn phù hợp cho các task đơn giản hoặc các script test nhanh.
+Nếu `tnorm` không cần TSM/FSM thì dùng `exec` để mô tả các hành vi tuyến tính. Đây là lựa chọn phù hợp cho các tác vụ đơn giản.
 
 ```yaml
 project: "uEDP"
 tlist:
-- tnorm: KID_TASK_SIMPLE
-  exec:
-  - on_sig: SIG_A
-    steps:
-    - actv: post_msg
-      to: KID_TASK_B
-      sig: SIG_B
-      data: NULL
-    - actv: log
-      to: KID_TASK_SIMPLE
-      sig: SIG_LOG
-      data: "Task Simple received SIG_A and sent SIG_B to Task B."
+  - tnorm: KID_TASK_SIMPLE
+    exec:
+      - on_sig: SIG_A
+        steps:
+          - actv: 
+              kind: c_call
+              function: printf
+              args: ['"[Task Simple] Received SIG_A, executing action."']
 ```
 
-Task Poll nên đi theo nhịp polling riêng và chỉ khai báo các bước xử lý tuần tự, không gắn với state machine:
+`tpoll` nên đi theo nhịp polling riêng và chỉ khai báo các bước xử lý tuần tự, không gắn với state machine:
 
 ```yaml
 project: "uEDP"
 tlist:
-- tpoll: KID_TASK_POLL
-  exec:
-  - actv: poll_led
-    to: NULL
-    sig: NULL
-    data: NULL
+  - tpoll: KID_TASK_POLL
+    exec:
+      - actv: 
+          kind: c_call
+          function: printf
+          args: ['"[Task Poll] Executing periodic action."']
 ```
 
-Trong current core, task poll chỉ nên dùng cho logic nhẹ, còn các tác vụ dọn dẹp hệ thống, flush log hoặc đồng bộ nền nên được đẩy sang OCE.
+Trong current core, `tpoll` chỉ nên dùng cho logic nhẹ, còn các tác vụ dọn dẹp hệ thống, flush log hoặc đồng bộ nền nên được đẩy sang OCE.
 
-### Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`
-
-Tầng khai báo Kconfig (`pltf/kconfigspec/usrinp.py` + `pltf/kconfigspec/tnorm.py`, sinh ra `sources/app/kconfig/decl.kconfig`) trước đây chỉ hỏi **một lần duy nhất** "Do you want to use FSM?" / "Do you want to use TSM?" kèm **một số lượng state dùng chung** cho toàn bộ `num_tasks_norm` task đã khai báo. Điều này không khớp với model μE-LS mô tả ở trên: mỗi `tnorm` trong `tlist` tự quyết định dùng `tsm` hay `fsm` (hoặc cả hai, hoặc không dùng cái nào), với số lượng state hoàn toàn độc lập theo độ dài mảng `tsm:`/`fsm:` khai báo riêng cho task đó.
-
-`kconfigspec.usrinp.user_input()` và `kconfigspec.tnorm.task_norm_declaration()` đã được sửa đổi để hỏi và sinh cấu hình **theo từng task**: với mỗi task #i (`i` từ 1 đến `num_tasks_norm`), người dùng được hỏi riêng có dùng FSM không, có dùng TSM không, và nếu có thì bao nhiêu state — kết quả trả về là 4 list (`fsm_flags`, `tsm_flags`, `num_fsm_states_list`, `num_tsm_states_list`), trong đó phần tử thứ `i - 1` ứng với task #i. `task_norm_declaration()` dùng đúng 4 list này để sinh `APPCFG_TSM_TASK_{i}`/`APPCFG_FSM_TASK_{i}` kèm các state con `_STATE_{j}`, với số lượng `j` riêng biệt cho từng task, thay vì dùng chung 1 số `num_tsm_states`/`num_fsm_states` cho tất cả task như bản cũ.
-
-Với PLD/μE-LS, thay đổi này có ý nghĩa: dữ liệu `task_tsm`/`task_fsm` mà `dotcfg_cfp.py` build từ `.config` (xem `pltf-design.md` mục 3.3) giờ có thể ánh xạ 1-1 với độ dài mảng `tsm:`/`fsm:` của từng `tnorm` trong `tlist`, không còn bị giới hạn "cả hệ thống chỉ có 1 số lượng state chung" như trước — một task hoàn toàn có thể vừa dùng TSM vừa dùng FSM cùng lúc (hoặc không dùng cái nào), với số state khác hẳn task còn lại, mà không ảnh hưởng tới phần khai báo của các task khác trong cùng `decl.kconfig`. Đây là điều kiện cần để pipeline sinh code từ μE-LS (xem mục 3.5 `pltf-design.md`, μE-LS Codegen) có thể đọc đúng số lượng state khai báo trong YAML mà không còn bị giới hạn bởi 1 con số cấu hình chung ở tầng Kconfig như trước.
-
-Lưu ý: `kconfigspec` chỉ sinh khung khai báo tên (`APPCFG_TSM_TASK_{i}`, `APPCFG_TSM_TASK_{i}_STATE_{j}`, `APPCFG_FSM_TASK_{i}`, `APPCFG_FSM_TASK_{i}_STATE_{j}`, ...) ở tầng Kconfig — nội dung logic thật của từng state (`trans`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`) vẫn đến hoàn toàn từ khai báo `tsm:`/`fsm:` trong μE-LS, không phải từ Kconfig.
+<!-- STATUS
+  Bộ sinh code Python `pycdscriptor` đã hỗ trợ đầy đủ cho process-syntax thông qua kiểm tra SIL vir-testobj.
+  Ngoài ra actv-obj-post đã được loại bỏ hoàn toàn khỏi pydscriptor và tài liệu.
+-->
 
 ### PPLP - Cấu hình logging pipeline
+
+<!-- STATUS
+  Hiện tại `pycdscriptor` chưa hỗ trợ sinh cấu hình PPLP, nhưng core đã hỗ trợ đầy đủ các API liên quan đến logging pipeline.
+-->
 
 PPLP khai báo chính sách logging cho Core và backend xuất log. Trong runtime, `itnlog` chỉ giữ filter và callback output; việc flush ra console, UART hoặc file nên đi qua OCE hoặc callback đã đăng ký.
 
@@ -431,6 +396,10 @@ pplp:
 
 ### ISR - Dịch vụ ngắt
 
+<!-- TODO
+  Loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+-->
+
 Dịch vụ ngắt là một khối logic quan trọng trong hệ thống μE(DP)/-OS, cho phép xử lý các sự kiện ngắt từ phần cứng hoặc phần mềm. Trong thiết kế môi trường phần cứng đơn nhân, ISR và Task là 2 khối logic có tính tranh chấp cao, do đó cần được thiết kế cẩn thận để tránh các vấn đề về đồng bộ hóa và hiệu suất.
 
 Ở API thủ công, ISR được thiết kế API riêng biệt nhằm đảm bảo xử lý ngắn gọn nhưng vẫn đáp ứng logic của Task.
@@ -453,6 +422,10 @@ Trong core hiện tại, ISR chỉ cần `to` và `sig`; payload `data` chưa đ
 Syntax này đảm bảo sự ràng buộc ISR chỉ có một hành động duy nhất, giúp giảm thiểu thời gian xử lý ngắt và tránh các vấn đề về đồng bộ hóa với các Task khác.
 
 ### APE - Lời gọi vượt quyền tạm thời
+
+<!-- TODO
+  Loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+-->
 
 APE hay S-LnF APE là cơ chế được triển khai ở phiên bản 1.1.0 và 1.1.1 để hỗ trợ tnorm có thể gọi các hàm vượt quyền tạm thời (Privilege Escalation) trong môi trường μE(DP)/-OS. Trong μE-LS, APE là khai báo cục bộ theo từng tnorm: mỗi task có thể tự định nghĩa trigger APE cho chính nó, và Core chỉ cung cấp cơ chế thực thi tương ứng qua `uedp_task_norm_post_urgent()` và `uedp_task_norm_set_urgent()`.
 
@@ -550,6 +523,10 @@ Khi dùng `mode: non-slnf`, tnorm không bắt buộc phải tự gửi một ur
 
 ### OCE - Dịch vụ ngoài ngữ cảnh logic
 
+<!-- TODO
+  Cân nhắc loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+-->
+
 OCE (Out-Context Execution) là cơ chế được triển khai ở phiên bản 1.1.3 để hỗ trợ tnorm có thể thực hiện các dịch vụ ngoài ngữ cảnh logic (Out-Context Services) trong môi trường μE(DP)/-OS.
 
 ```yaml
@@ -564,11 +541,15 @@ Trong core hiện tại, `ocesvc_register()` tự gán `uint8_t id`, vì vậy `
 
 OCE nên được dùng cho các việc như flush log, đồng bộ nền, hoặc dọn tài nguyên sau vòng scheduler chính. Nó không nên bị lẫn với task poll vì poll vẫn nằm trong path ứng dụng, còn OCE là service hậu trường của hệ thống.
 
-<!-- comment
+<!-- NOTE
   Trong μE-LS, cú pháp hiện tại không hỗ trợ việc cho phép chỉ định service tiếp theo được gọi sau khi service hiện tại hoàn tất. Nếu muốn mở rộng, có thể thêm trường `next_service` hoặc `callback` để chỉ định service tiếp theo, nhưng hiện tại chưa có support trong core. Do đó, tính năng này sẽ được xem xét trong các phiên bản tương lai của μE-LS.
- -->
+-->
 
 ### Template tham chiếu tổng hợp
+
+<!-- TODO
+  Merge nhánh feat để đưa logic-testobj làm ví dụ tổng hợp cho template tham chiếu nhanh.
+-->
 
 Khi cần một khung khai báo đầy đủ để tham chiếu nhanh, có thể dùng template sau. Các giá trị `NULL` hoặc placeholder chỉ mang tính gợi ý, người dùng thay thế theo bài toán thực tế.
 
@@ -686,6 +667,10 @@ outexec:
 
 ### Phân biệt `act`, `actv` và `steps`
 
+<!-- TODO
+  Loại bỏ toàn bộ mục này do không còn dùng `act` và `actv` nữa, chỉ giữ lại `steps` và `actv` trong các khai báo HSMC.
+-->
+
 - `act` là một hành vi đơn lẻ, có thể là `post_msg`, `log`, `timer_set`, v.v. Nó được dùng trong `steps` của các khai báo non-HSMC, tức là sử dụng `exec`.
 - `actv` là một alias cho `act`, dùng để nhấn mạnh đây là hành vi đang được thực thi trong ngữ cảnh hiện tại của FSM/TSM. Nó có thể chứa các trường bổ sung như `to`, `sig`, `data` để xác định hành vi cụ thể. được sử dụng trong khai báo HSMC, tức là trong `on_ntry`, `on_actv`, `on_exit`, hoặc `on_recv`.
 - `steps` là một danh sách các hành vi (`actv`) được thực hiện tuần tự trong một ngữ cảnh cụ thể, như `on_ntry`, `on_actv`, `on_exit`, hoặc `on_recv`. Mỗi bước trong `steps` có thể là một hành vi đơn lẻ hoặc một hành vi phức tạp, tùy thuộc vào logic của task.
@@ -693,6 +678,10 @@ outexec:
 > Kết luận đơn giản: `act` là hành vi cơ bản, `actv` là hành vi được thực thi trong ngữ cảnh cụ thể, `steps` là danh sách các hành vi được thực hiện theo thứ tự.
 
 ### Quy tắc mapping action và payload
+
+<!-- TODO
+  Loại bỏ toàn bộ liên quan đến D2MP vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+-->
 
 `actv` là discriminator của action, không phải nơi chứa toàn bộ câu lệnh C trong mọi trường hợp. Với built-in action được PLTF hỗ trợ, các tham số phải nằm ở các trường semantic tương ứng:
 
@@ -796,12 +785,15 @@ tlist:
 
 <!-- REVIEW
 Cân nhắc thiết kế hoặc bổ sung thông tin trong tài liệu để làm rõ khi dùng `ptype: REF` thì ai sẽ thực thi quyền quản lý và kích thước dpool để copy dữ liệu từ biến toàn cục sang message. Cần đảm bảo rằng việc truyền tham chiếu và tham trị được thực hiện một cách an toàn và hiệu quả, tránh các vấn đề về đồng bộ hóa và quản lý bộ nhớ.
+
+#STATUS - DONE
 -->
 
 <!-- NOTE
 Suy xét việc bổ sung thiết kế mới trong mã nguồn thêm 1 dpool hỗ trợ tính năng GDA (Global Data Area) để quản lý các biến toàn cục, đặc biệt là khi sử dụng `ptype: REF` để truyền tham chiếu. Điều này sẽ giúp đảm bảo rằng các task có thể truy cập và sử dụng dữ liệu toàn cục một cách an toàn và hiệu quả, đồng thời tránh các vấn đề về đồng bộ hóa và quản lý bộ nhớ. 
 
 Có thể cân nhắc đưa cho Minh trong việc thực thi.
+#STATUS - DONE
 -->
 
 <!-- SECTION - GDA
@@ -813,3 +805,17 @@ Section này đã được review và cập nhật các task trong task list đ�
 #STATUS - DONE
 // !SECTION
 -->
+
+### Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`
+
+<!-- TODO
+  Rename lại section này.
+-->
+
+Tầng khai báo Kconfig (`pltf/kconfigspec/usrinp.py` + `pltf/kconfigspec/tnorm.py`, sinh ra `sources/app/kconfig/decl.kconfig`) trước đây chỉ hỏi **một lần duy nhất** "Do you want to use FSM?" / "Do you want to use TSM?" kèm **một số lượng state dùng chung** cho toàn bộ `num_tasks_norm` task đã khai báo. Điều này không khớp với model μE-LS mô tả ở trên: mỗi `tnorm` trong `tlist` tự quyết định dùng `tsm` hay `fsm` (hoặc cả hai, hoặc không dùng cái nào), với số lượng state hoàn toàn độc lập theo độ dài mảng `tsm:`/`fsm:` khai báo riêng cho task đó.
+
+`kconfigspec.usrinp.user_input()` và `kconfigspec.tnorm.task_norm_declaration()` đã được sửa đổi để hỏi và sinh cấu hình **theo từng task**: với mỗi task #i (`i` từ 1 đến `num_tasks_norm`), người dùng được hỏi riêng có dùng FSM không, có dùng TSM không, và nếu có thì bao nhiêu state — kết quả trả về là 4 list (`fsm_flags`, `tsm_flags`, `num_fsm_states_list`, `num_tsm_states_list`), trong đó phần tử thứ `i - 1` ứng với task #i. `task_norm_declaration()` dùng đúng 4 list này để sinh `APPCFG_TSM_TASK_{i}`/`APPCFG_FSM_TASK_{i}` kèm các state con `_STATE_{j}`, với số lượng `j` riêng biệt cho từng task, thay vì dùng chung 1 số `num_tsm_states`/`num_fsm_states` cho tất cả task như bản cũ.
+
+Với PLD/μE-LS, thay đổi này có ý nghĩa: dữ liệu `task_tsm`/`task_fsm` mà `dotcfg_cfp.py` build từ `.config` (xem `pltf-design.md` mục 3.3) giờ có thể ánh xạ 1-1 với độ dài mảng `tsm:`/`fsm:` của từng `tnorm` trong `tlist`, không còn bị giới hạn "cả hệ thống chỉ có 1 số lượng state chung" như trước — một task hoàn toàn có thể vừa dùng TSM vừa dùng FSM cùng lúc (hoặc không dùng cái nào), với số state khác hẳn task còn lại, mà không ảnh hưởng tới phần khai báo của các task khác trong cùng `decl.kconfig`. Đây là điều kiện cần để pipeline sinh code từ μE-LS (xem mục 3.5 `pltf-design.md`, μE-LS Codegen) có thể đọc đúng số lượng state khai báo trong YAML mà không còn bị giới hạn bởi 1 con số cấu hình chung ở tầng Kconfig như trước.
+
+Lưu ý: `kconfigspec` chỉ sinh khung khai báo tên (`APPCFG_TSM_TASK_{i}`, `APPCFG_TSM_TASK_{i}_STATE_{j}`, `APPCFG_FSM_TASK_{i}`, `APPCFG_FSM_TASK_{i}_STATE_{j}`, ...) ở tầng Kconfig — nội dung logic thật của từng state (`trans`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`) vẫn đến hoàn toàn từ khai báo `tsm:`/`fsm:` trong μE-LS, không phải từ Kconfig.
