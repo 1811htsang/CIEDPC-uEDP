@@ -150,14 +150,6 @@
 	void uedp_msg_ref_dec(uedp_msg_t* msg);
 
 	/**
-	 * @brief Sao chép dữ liệu vào tin nhắn
-	 * @param msg: Tin nhắn cần sao chép dữ liệu vào
-	 * @param data: Con trỏ đến dữ liệu cần sao chép
-	 * @param size: Kích thước dữ liệu cần sao chép
-	 */
-	void uedp_msg_set_data(uedp_msg_t* msg, const ui8* data, ui8 size);
-
-	/**
 	 * @brief Hàm nội bộ để khởi tạo Pool tin nhắn
 	 * 
 	 * @param tid ID của tác vụ đích nhận tin nhắn từ ISR
