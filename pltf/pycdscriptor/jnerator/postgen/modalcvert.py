@@ -57,6 +57,12 @@ def _emit_action(action: dict[str, Any], task_symbols: set[str]) -> str:
     args = ', '.join(action.get('args', []))
     return f'{function}({args});' if function else '/* c_call requires function. */'
   if kind in ('post_msg', 'uedp_post_msg', 'uedp_task_norm_post_msg'):
+    # TASK 
+    '''
+    In correlation to remove actv-obj-post support, 
+    actv-obj now only need to support c_call and c_stmt
+    '''
+  
     target = _resolve_task_symbol(action.get('to', ''), task_symbols)
     signal = action.get('sig', '')
     value, data_type, mode = _data_parts(action)
