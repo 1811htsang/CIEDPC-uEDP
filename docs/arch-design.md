@@ -203,13 +203,41 @@ TSM tách biệt hoàn toàn giữa Dữ liệu cấu hình (nằm trong Flash) 
 
 ##### Cơ chế hoạt động
 
-- Tự động hóa Entry/Exit: Khi thực hiện `tsm_trans`, Core tự động gọi hàm thoát của trạng thái cũ và hàm vào của trạng thái mới. Điều này đảm bảo tài nguyên (như Timer) luôn được dọn dẹp sạch sẽ.
-- Cơ chế "Stay" & "Back":
-  - STAY: Thực thi logic nhưng không đổi trạng thái (tránh lặp lại Entry/Exit vô ích).
-  - BACK: Tự động quay lại trạng thái trước đó nhờ biến prev_state, giải quyết bài toán "State Explosion".
-- Tra cứu O(1): Sử dụng 16-bit ID giúp tốc độ chuyển trạng thái đạt mức tối đa của phần cứng.
+TSM hoạt động quanh 3 API chính bao gồm:
 
-Có thể tham khảo thiết kế chương trình mẫu trong `test01` để thấy rõ cách sử dụng TSM trong μEDP, nơi TSM được sử dụng để quản lý các chế độ vận hành của Task một cách hiệu quả và linh hoạt.
+- `tsm_init()`: Khởi tạo TSM với trạng thái mặc định, tác động đến one-time on_entry (`ot_on_ntry`).
+- `tsm_dispatch()`: Thực hiện phân phối tin nhắn và thực thi tác vụ, tác động đến `on_active`.
+- `tsm_trans()`: Thực hiện chuyển trạng thái, tác động đến in-loop on_entry (`il_on_ntry`) và `on_exit`.
+
+Khi bắt đầu, `tsm_init()` được gọi để thiết lập trạng thái mặc định và thực hiện one-time on_entry (`ot_on_ntry`) của trạng thái đó.
+
+Để TSM hoạt động thì `tsm_dispatch()` phải được gọi trong handler của task để task scheduler (tskeduler) phân phối tín hiệu đến TSM. Khi nhận được tín hiệu, TSM sẽ thực thi hàm `fn_on_active` của trạng thái hiện tại. Sau khi hoàn thành, TSM sẽ thực thi `fn_on_exit` của trạng thái hiện tại và chuyển sang trạng thái mới thông qua `fn_on_entry` của trạng thái mới.
+
+Ở lớp hoạt động cao hơn, TSM có logic ràng buộc với scheduler của cõi. Nghĩa là, khi sử dụng TSM, phải suy nghĩ đến mức độ ưu tiên giữa các task và logic chuyển trạng thái. TSM không tự động quản lý ưu tiên giữa các task, mà chỉ quản lý trạng thái của một task cụ thể.
+
+Do đó, khi thiết kế hệ thống, cần đảm bảo rằng các task có mức độ ưu tiên phù hợp để tránh tình trạng loop hoặc sai logic.
+
+```asciidoc
+              #all                   ║
+              ┌──────────┐ [in]      ║ > tsm_init
+              │  ot_ntry │           ║
+              └────┼─────┘           ║
+    -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
+            #cur ┌─┴──┐[out][on]     ║
+          ┌──────┼actv┼──────┐       ║ > tsm_dispatch
+          │      └────┘      │       ║
+    -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
+          │                  │  #nxt ║
+        ┌─┼──┐           ┌───┼───┐   ║
+   #cur │exit┼───────────┼il_ntry│   ║ > tsm_trans
+        └────┘           └───────┘   ║
+          [on]                 [in]  ║
+                                     ║
+```
+
+<!-- TODO
+  Bổ sung mẹo sử dụng HSMC trong syntax của PLD/μE-LS.
+-->
 
 #### FSM - Finite State Machine
 
@@ -226,47 +254,15 @@ FSM được thiết kế theo mô hình Pointer-Swapping (Tráo đổi con tr�
 - Dispatch trực tiếp: Scheduler gọi fsm_dispatch, Core sẽ thực thi ngay hàm mà con trỏ đang trỏ tới.
 - Phù hợp với Logic tạm thời: Dùng cho các chuỗi hành động ngắn hạn như giải mã giao thức (UART parsing) hoặc Menu giao diện.
 
-Có thể tham khảo thiết kế chương trình mẫu trong `test03` để thấy rõ cách sử dụng FSM trong μEDP, nơi FSM được sử dụng để quản lý logic giải mã giao thức UART một cách linh hoạt và hiệu quả.
+##### Cơ chế làm việc
 
-Trong `test03` FSM được thiết kế với mỗi hàm là state_handler là 1 trạng thái. Mỗi trạng thái đều có 3 tín hiệu là `UEDP_FSM_SIG_INIT`, `UEDP_FSM_SIG_ENTRY`, `UEDP_FSM_SIG_EXIT` để quản lý vòng đời của trạng thái, sau đó mới đến các tín hiệu nghiệp vụ khác. Khi có sự kiện chuyển trạng thái thì sẽ thực hiện theo thứ tự là `EXIT` -> `ENTRY` để đảm bảo rằng tài nguyên được dọn dẹp sạch sẽ trước khi vào trạng thái mới.
+FSM hoạt động với các API chính bao gồm:
 
-Lưu ý rằng trong thiết kế của `test03`, FSM của các tác vụ luôn được khởi tạo vào `state_idle`, chỉ có các `state_idle` mới chứa tín hiệu `UEDP_FSM_SIG_INIT` để thực hiện các thao tác khởi tạo FSM, sau đó phụ thuộc vào tín hiệu bắt đầu từ người dùng mà sẽ chuyển sang `state_active` để thực hiện các chức năng chính của bài test. Điều này giúp đảm bảo rằng FSM luôn được khởi tạo đúng cách và có thể hoạt động một cách hiệu quả ngay khi nhận được tín hiệu bắt đầu từ người dùng.
+- `fsm_init()`: Khởi tạo FSM với trạng thái mặc định.
+- `fsm_dispatch()`: Thực hiện phân phối tin nhắn và gọi hàm trạng thái hiện tại.
+- `fsm_go_next()/fsm_go_back()`: Thực hiện chuyển trạng thái bằng cách tráo đổi con trỏ hàm.
 
-Ngoài ra thì đối với trường hợp looping của một trạng thái thì có thể xử lý thông qua việc calling isolation - bỏ mặc trạng thái không gọi tới. Ví dụ trong `test03`:
-
-```c
-void usr_state_active(uedp_msg_t* msg) {
-  switch (msg->sig) {
-    case UEDP_FSM_SIG_EXIT:
-      printf("[USR] Exiting ACTIVE state...\n");
-      break;
-    case UEDP_FSM_SIG_ENTRY:
-      printf("[USR] Entering ACTIVE state. System is now active.\n");
-      // Thực hiện gửi SIG_USR_START tới task A để kích hoạt chuỗi hành động
-      uedp_msg_t* msg_to_a = uedp_msg_alloc(TASK_NORM_A_ID, SIG_USR_START, 0);
-      uedp_task_norm_post_msg(TASK_NORM_A_ID, msg_to_a);
-      printf("[USR] Sent START signal to Task A. Waiting for further signals...\n");
-      break;
-    case SIG_USR_STOP:
-      printf("[USR] Received STOP signal. Transitioning to IDLE state...\n");
-      uedp_fsm_go_next(&fsm_usr, usr_state_idle); 
-      /**
-       * @brief Có thể dùng uedp_fsm_go_back(&fsm_usr) để quay lại trạng thái trước đó, 
-       *        nhưng ở context này thì go_next sẽ trực quan hơn 
-       *        để thể hiện rõ ràng việc chuyển đổi trạng thái từ ACTIVE về IDLE 
-       *        khi nhận được tín hiệu STOP.
-       */
-      break;
-    default:
-      printf("[USR] Encountered unexpected signal in ACTIVE state: %x\n", msg->sig);
-      break;
-  }
-}
-```
-
-Khi ở `state_active` và truyền tín hiệu qua tác vụ A thì FSM của TASK_USR trở thành loop vì không gọi tới. Điều này cho phép FSM của TASK_USR vẫn duy trì trạng thái `state_active` và có thể tiếp tục nhận và xử lý các tín hiệu khác mà không bị gián đoạn bởi việc chuyển trạng thái, đồng thời đảm bảo rằng tài nguyên được quản lý một cách hiệu quả trong suốt quá trình hoạt động của trạng thái này.
-
-Một lưu ý khác cần để tâm trong `test03` khi tác vụ A nhận `SIG_TSK_B_TO_A` thì sẽ gọi `uedp_fsm_go_next(&fsm_a, task_a_state_idle)` để chuyển trạng thái của tác vụ A về `state_idle`. Ở đây người dùng hoàn toàn có thể sử dụng `uedp_fsm_go_back(&fsm_a)` để quay lại trạng thái trước đó. Tuy nhiên trong context này thì `go_next` sẽ trực quan hơn để thể hiện rõ ràng việc chuyển đổi trạng thái từ `state_active` về `state_idle` khi nhận được tín hiệu `SIG_TSK_B_TO_A`, điều này giúp cho code dễ đọc và dễ hiểu hơn, đồng thời vẫn đảm bảo rằng FSM của tác vụ A được quản lý một cách hiệu quả và có thể hoạt động một cách linh hoạt trong suốt quá trình xử lý tín hiệu.
+Các trạng thái (st8) được xem như các "hàm" và được gọi trực tiếp thông qua con trỏ hàm. Khi một tín hiệu đến, FSM sẽ gọi hàm trạng thái hiện tại, và nếu cần chuyển sang trạng thái khác, nó sẽ thay đổi con trỏ hàm để trỏ tới hàm trạng thái mới. Sau khi hoàn thành, các st8 được tùy chọn trạng thái kế tiếp hoặc quay lại trạng thái trước đó thông qua `fsm_go_next()` hoặc `fsm_go_back()`.
 
 #### Phối hợp giữa TSM và FSM
 
