@@ -455,16 +455,16 @@ Ngoài ra, một lưu ý thứ 3 cần đề cập:
 - [x] Merge nhánh feat vào nhánh docs kèm thay đổi về folder mới chứa các test-obj và đường dẫn trong tài liệu thiết kế syntax.
 - [X] Remove `test` khỏi gitignore để đưa các testobj vào quản lý trong git.
 - [x] Bổ sung README.md cho testobj folder để hướng dẫn naming convention và purposes.
-- [ ] Bổ sung scripting để tự động append các testobj vào lstaxizer.yaml để tăng khả năng tự động hóa quy trình làm việc.
-- [ ] Bổ sung tài liệu hướng dẫn thiết kế logic-testobj trên test và product-in-use để tránh các vấn đề hiểu sai logic thực thi trong tương lai ở cả mặt test lẫn product-in-use.
+- [x] Bổ sung scripting để tự động append các testobj vào lstaxizer.yaml để tăng khả năng tự động hóa quy trình làm việc.
+- [ ] Bổ sung tài liệu hướng dẫn thiết kế logic-testobj trên test và product-in-use để tránh các vấn đề hiểu sai logic thực thi trong tương lai ở cả mặt test lẫn product-in-use. //NOTE - Đã bổ sung trên docs/uels-syntax.md nhưng chưa có phần user-manual. Cần tiếp tục
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên phy-testobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
-- [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
+- [x] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //DEPRECATED
 
 <!-- STATUS
-Loại bỏ task bên trên do tính năng file inclusion là tính năng specific của PyYAML, ruamel.yaml và không phải là tính năng chuẩn của YAML. Do đó, việc triển khai remote-file alias sẽ không được hỗ trợ trong các phiên bản hiện tại của μE-LS.
+Loại bỏ task bên trên do tính năng file inclusion là tính năng specific của PyYAML, ruamel.yaml và không phải là tính năng chuẩn của YAML. Do đó, việc triển khai remote-file alias sẽ không được hỗ trợ trong các phiên bản hiện tại của μE-LS mà thay thế bằng in-file appendable configuration - IFAC.
 -->
 
-- [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
+- [x] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //DEPRECATED - Không cần rewrite do đã đủ generic introduction.
 - [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table - pycdscriptor.ustab) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này.
 - [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.
