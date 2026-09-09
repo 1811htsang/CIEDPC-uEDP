@@ -210,7 +210,7 @@ Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiệ
 - [x] Sửa đổi và cập nhật thiết kế PLD/μE-LS tương ứng với sự thay đổi của kconfigspec.usrinp và kconfigspec.tnorm //NOTE - Ở task này, yêu cầu cụ thể là bổ sung sửa đổi tài liệu tương ứng.
 - [x] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
 - [x] Bổ sung phiên bản tiếng anh của `user-manual` để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
-- [ ] Bổ sung sửa đổi tài liệu thiết kế PLTF bản EN và VN. //NOTE - Ở task này là kiểm tra sửa đổi tài liệu thiết kế PLTF bản EN và VN theo các thay đổi về module name và thiết kế logic của các module.
+- [x] Bổ sung sửa đổi tài liệu thiết kế PLTF bản EN và VN. //NOTE - Ở task này là kiểm tra sửa đổi tài liệu thiết kế PLTF bản EN và VN theo các thay đổi về module name và thiết kế logic của các module.
 - [ ] Kiểm tra lại các thay đổi mới trong tài liệu cú pháp sau hiệu chỉnh của bên nhánh chore để đảm bảo documentation và source code được đồng bộ và nhất quán. //NOTE - Follow theo commit số `bab87c3dece35ccfcb71888f1086b1c45fa0b4f7` của nhánh chore.
 - [ ] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [ ] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
@@ -416,7 +416,7 @@ lstaxer.kre8 và jnerator.postgen.
 - [x] Sửa đổi logic-testobj của A và USR với thiết kế syntax tối ưu hơn cho multiline để vượt qua rào cản của actv-obj gốc.
 - [x] Cân nhắc remove actv-obj-post trong toàn bộ thiết kế do sự thiếu xót trong review logic-testobj và thiết kế HSMC gốc.
 
-<!-- STATUS
+<!-- SECTION - actv-obj-post removal task
 Theo kết quả kiểm tra trước đó và các kết luận từ việc review logic-testobj và thiết kế HSMC gốc
 
 Ở thời điểm hiện tại sau khi sửa chữa toàn bộ logic-testobj của A và USR với thiết kế syntax tối ưu hơn cho multiline
@@ -441,14 +441,22 @@ Kết luận 2 chính là phải remove toàn bộ syntax actv-obj-post trong th
 1. Giảm thiểu các vấn đề tương thích với các API khác trong lõi μEDP, giúp người dùng tùy ý bổ sung các điều kiện ràng buộc hay các logic phức tạp tại một thời điểm
 2. Đảm bảo giảm tải độ phức tạp của syntax μE-LS và mã nguồn kconfigspec, pycdscriptor.
 
+// STATUS - Đã hoàn thành, chưa sửa đổi trên tài liệu thiết kế.
+
 Ngoài ra, một lưu ý thứ 3 cần đề cập:
 
 //NOTE - Nhớ bổ sung thiết kế từ giấy nháp vào markdown để làm tài liệu tổng hợp thiết kế của HSMC và quy trình hướng dẫn xây dựng logic-testobj trên test và product-in-use.
 
+// !SECTION
 -->
 
+- [x] Remove toàn bộ syntax actv-obj-post trong thiết kế syntax gốc và giữ c_call hoặc c_stmt cho người sử dụng để giảm thiểu các vấn đề tương thích với các API khác trong lõi μEDP.
+- [x] Sửa đổi tài liệu thiết kế syntax với các thay đổi mới và cập nhật trạng thái cho các task cũ.
+- [x] Merge nhánh feat vào nhánh docs kèm thay đổi về folder mới chứa các test-obj và đường dẫn trong tài liệu thiết kế syntax.
+- [X] Remove `test` khỏi gitignore để đưa các testobj vào quản lý trong git.
+- [x] Bổ sung README.md cho testobj folder để hướng dẫn naming convention và purposes.
+- [ ] Bổ sung scripting để tự động append các testobj vào lstaxizer.yaml để tăng khả năng tự động hóa quy trình làm việc.
 - [ ] Bổ sung tài liệu hướng dẫn thiết kế logic-testobj trên test và product-in-use để tránh các vấn đề hiểu sai logic thực thi trong tương lai ở cả mặt test lẫn product-in-use.
-- [ ] Remove toàn bộ syntax actv-obj-post trong thiết kế syntax gốc và giữ c_call hoặc c_stmt cho người sử dụng để giảm thiểu các vấn đề tương thích với các API khác trong lõi μEDP.
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên phy-testobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 
