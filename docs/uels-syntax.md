@@ -125,9 +125,10 @@ task_b:
 
 Việc sử dụng `<<` cho phép merge các trường từ anchor vào dictionary hiện tại, giúp giảm thiểu lỗi và tăng tính nhất quán trong cấu hình.
 
-<!-- TODO
+<!-- DEPRECATED - Old TASK
 - Bổ sung thêm phần tag include của YAML nâng cao để hỗ trợ việc include các file cấu hình con, ví dụ `!include "signals.yaml"`.
 - Bổ sung thêm việc tìm hiểu các giải pháp để hỗ trợ lấy alias từ file include mà không cần phải khai báo lại trong file chính.
+#STATUS - DONE
 -->
 
 ### Ví dụ tổng hợp
@@ -174,7 +175,7 @@ Lưu ý rằng cú pháp này dùng để làm ví dụ mẫu, không phải là
 
 Cú pháp μE-LS được thiết kế để mô tả các cấu trúc logic trong hệ thống μE(DP)/-OS, bao gồm các khối như Task, State Machine (TSM), Signal, Policy, và các hành động (Action Snippets). Các cấu hình như Pool, Queue và Timer được cấu hình tự động bởi Kconfig + pre-PLTF + Jinja2, do đó không cần khai báo trong μE-LS. Tuy nhiên, người dùng có thể tùy chỉnh các thông số này thông qua Kconfig.
 
-<!-- TODO
+<!-- TASK
 Cần rewrite lại phần này tương ứng với các khối phát triển đã có bên nhánh feat.
 -->
 
@@ -315,14 +316,15 @@ tlist:
 Trong current core, `tpoll` chỉ nên dùng cho logic nhẹ, còn các tác vụ dọn dẹp hệ thống, flush log hoặc đồng bộ nền nên được đẩy sang OCE.
 
 <!-- STATUS
-  Bộ sinh code Python `pycdscriptor` đã hỗ trợ đầy đủ cho process-syntax thông qua kiểm tra SIL vir-testobj.
-  Ngoài ra actv-obj-post đã được loại bỏ hoàn toàn khỏi pydscriptor và tài liệu.
+Bộ sinh code Python `pycdscriptor` đã hỗ trợ đầy đủ cho process-syntax thông qua kiểm tra SIL vir-testobj.
+Ngoài ra actv-obj-post đã được loại bỏ hoàn toàn khỏi pydscriptor và tài liệu.
 -->
 
 ### PPLP - Cấu hình logging pipeline
 
 <!-- STATUS
-  Hiện tại `pycdscriptor` chưa hỗ trợ sinh cấu hình PPLP, nhưng core đã hỗ trợ đầy đủ các API liên quan đến logging pipeline.
+Hiện tại `pycdscriptor` chưa hỗ trợ sinh cấu hình PPLP, nhưng core đã hỗ trợ đầy đủ các API liên quan đến logging pipeline.
+Trong thiết kế thì PPLP có cấu hình riêng biệt với process-syntax nên có thể tích hợp module riêng để sinh code PPLP từ YAML.
 -->
 
 PPLP khai báo chính sách logging cho Core và backend xuất log. Trong runtime, `itnlog` chỉ giữ filter và callback output; việc flush ra console, UART hoặc file nên đi qua OCE hoặc callback đã đăng ký.
@@ -367,7 +369,7 @@ Với `rprintf`:
 - `init`, `putc`, `write` là các callback function để khởi tạo, xuất ký tự và xuất chuỗi log.
 - `is_ready` là cờ để kiểm tra backend đã sẵn sàng nhận log hay chưa.
 
-<!-- comment
+<!-- TASK
 - Kiểm tra lại cú pháp logging pipeline, đảm bảo các trường `level`, `tag`, `output` được ánh xạ đúng với core API.
 
 ```yaml
@@ -392,39 +394,22 @@ pplp:
   - contract: ...
 ```
 
- -->
-
-### ISR - Dịch vụ ngắt
-
-<!-- TODO
-  Loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
 -->
 
-Dịch vụ ngắt là một khối logic quan trọng trong hệ thống μE(DP)/-OS, cho phép xử lý các sự kiện ngắt từ phần cứng hoặc phần mềm. Trong thiết kế môi trường phần cứng đơn nhân, ISR và Task là 2 khối logic có tính tranh chấp cao, do đó cần được thiết kế cẩn thận để tránh các vấn đề về đồng bộ hóa và hiệu suất.
-
-Ở API thủ công, ISR được thiết kế API riêng biệt nhằm đảm bảo xử lý ngắn gọn nhưng vẫn đáp ứng logic của Task.
-
-Cấu trúc khai báo ISR trong μE-LS bao gồm các thành phần sau:
-
-- `isr`: ID của ISR (ví dụ: `KID_ISR_TIMER`).
-- `to`: Task nhận signal từ ISR.
-- `sig`: Signal được đẩy vào FIFO ISR và chuyển thành message ở đầu vòng scheduler.
-
-```yaml
-isr:
-- id: KID_ISR_TIMER
-  to: KID_TASK_TIM
-  sig: KID_SIG_TIM_TICK
-```
-
-Trong core hiện tại, ISR chỉ cần `to` và `sig`; payload `data` chưa được dùng ở đường `uedp_task_norm_post_isr()` và cũng bị cấm sử dụng do ISR không được phép thao tác trực tiếp với vùng dữ liệu của Core.
-
-Syntax này đảm bảo sự ràng buộc ISR chỉ có một hành động duy nhất, giúp giảm thiểu thời gian xử lý ngắt và tránh các vấn đề về đồng bộ hóa với các Task khác.
+<!-- TASK
+Loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+#STATUS - DONE
+-->
 
 ### APE - Lời gọi vượt quyền tạm thời
 
-<!-- TODO
-  Loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+<!-- DEPRECATED
+Loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+-->
+
+<!-- REVIEW
+Trong thiết kế lõi, chưa tính đến trường hợp `tnorm` gọi APE trong TSM hoặc out-context của `tsm_dispatch()` và cả `pycdscriptor` chưa hỗ trợ sinh code cho APE. 
+Do đó, cần review lại tính cần thiết của syntax này với use-case sử dụng trên API C-type gốc trước khi quyết định giữ lại hay loại bỏ hoàn toàn.
 -->
 
 APE hay S-LnF APE là cơ chế được triển khai ở phiên bản 1.1.0 và 1.1.1 để hỗ trợ tnorm có thể gọi các hàm vượt quyền tạm thời (Privilege Escalation) trong môi trường μE(DP)/-OS. Trong μE-LS, APE là khai báo cục bộ theo từng tnorm: mỗi task có thể tự định nghĩa trigger APE cho chính nó, và Core chỉ cung cấp cơ chế thực thi tương ứng qua `uedp_task_norm_post_urgent()` và `uedp_task_norm_set_urgent()`.
@@ -450,7 +435,6 @@ Với `mode: non-slnf`, core không cần self-post một message khẩn cấp. 
 
 ```yaml
 escal:
-  enabled: true
   mode: non-slnf
   trigger:
   - on_sig: SIG_CALL_IO_BOOST # Kích hoạt APE khi nhận signal này
@@ -459,6 +443,11 @@ escal:
     post_urgent: NULL # Không cần tự gửi urgent message mới
 ```
 
+<!-- REVIEW
+Trong thiết kế API C-type hiện tại, `uedp_task_norm_post_urgent` chỉ hỗ trợ gửi non-data urgent message,
+do đó, `post_urgent` trong μE-LS cũng chỉ hỗ trợ gửi urgent message không kèm dữ liệu và giữ nguyên style actv-obj-post của actv-obj cũ trên process-syntax.
+-->
+
 Ví dụ:
 
 ```yaml
@@ -466,65 +455,72 @@ project: "uEDP"
 tlist:
 - tnorm: KID_TASK_USR
   exec:
-  - on_sig: SIG_CALL_URGENT
-    steps:
-    - actv: post_msg
-      to: KID_TASK_USR
-      sig: SIG_EXEC_URGENT
-      data: NULL
-  - on_sig: SIG_EXEC_URGENT
-    steps:
-    - actv: log
-      to: KID_TASK_USR
-      sig: SIG_LOG
-      data: "Executing urgent action..."
+    - on_sig: SIG_CALL_URGENT
+      steps:
+        - actv:
+            kind: c_stmt
+            code: |
+              // Logic xử lý khi nhận SIG_CALL_URGENT
+              printf("[Task USR] Received SIG_CALL_URGENT, preparing to escalate.\n");
+    - on_sig: SIG_EXEC_URGENT
+      steps:
+        - actv: 
+            kind: c_call
+            function: printf
+            args: ['"[Task USR] Executing urgent action after escalation."']
   escal:
-    enabled: true
     mode: slnf
     trigger:
-    - on_sig: SIG_CALL_URGENT # Kích hoạt APE khi nhận signal này
-      post_urgent:
-        to: KID_TASK_USR
-        sig: SIG_EXEC_URGENT
-        data: NULL
-    - on_sig: SIG_URGENT_NEXT # Kích hoạt APE khi nhận signal này
-      post_urgent:
-        to: KID_TASK_USR
-        sig: SIG_EXEC_URGENT
-        data: NULL
+      - on_sig: SIG_CALL_URGENT # Kích hoạt APE khi nhận signal này
+        post_urgent:
+          to: KID_TASK_USR
+          sig: SIG_EXEC_URGENT
+          data: NULL
+      - on_sig: SIG_URGENT_NEXT # Kích hoạt APE khi nhận signal này
+        post_urgent:
+          to: KID_TASK_USR
+          sig: SIG_EXEC_URGENT
+          data: NULL
 - tnorm: KID_TASK_IO
   exec:
   - on_sig: SIG_CALL_IO_BOOST
     steps:
-    - actv: post_msg
-      to: KID_TASK_IO
-      sig: SIG_EXEC_IO_BOOST
-      data: NULL
+      - actv: 
+          kind: c_stmt
+          code: |
+            // Logic xử lý khi nhận SIG_CALL_IO_BOOST
+            printf("[Task IO] Received SIG_CALL_IO_BOOST, preparing to boost IO.\n");
   - on_sig: SIG_EXEC_IO_BOOST
     steps:
-    - actv: log
-      to: KID_TASK_IO
-      sig: SIG_LOG
-      data: "Executing IO boost action..."
+      - actv: 
+          kind: c_call
+          function: printf
+          args: ['"[Task IO] Executing IO boost action after escalation."']
   escal:
-    enabled: true
     mode: non-slnf
     trigger:
-    - on_sig: SIG_CALL_IO_BOOST # Kích hoạt APE khi nhận signal này
-      post_urgent: NULL # Không cần tự gửi urgent message mới
-    - on_sig: SIG_URGENT_NEXT # Kích hoạt APE khi nhận signal này
-      post_urgent: NULL # Không cần tự gửi urgent message mới
+      - on_sig: SIG_CALL_IO_BOOST # Kích hoạt APE khi nhận signal này
+        post_urgent: NULL # Không cần tự gửi urgent message mới
+      - on_sig: SIG_URGENT_NEXT # Kích hoạt APE khi nhận signal này
+        post_urgent: NULL # Không cần tự gửi urgent message mới
 ```
 
-Khi dùng `mode: non-slnf`, tnorm không bắt buộc phải tự gửi một urgent message mới. Mục đích là cho phép chính task đó giữ nhịp xử lý thêm một vòng với queue hiện có, nên trigger thường chỉ cần là một signal nội bộ hoặc một action local do cùng task phát ra. Nếu có urgent message mới, nó sẽ được xử lý theo thứ tự FIFO bình thường, không phải ưu tiên.
+Khi dùng `mode: non-slnf`, tnorm không bắt buộc phải tự gửi một urgent message mới. Mục đích là cho phép chính task đó giữ nhịp xử lý thêm một vòng với queue hiện có trước khi hoàn trả vòng làm việc về cho các task khác, nên trigger thường chỉ cần là một signal nội bộ hoặc một action local do cùng task phát ra. Nếu có urgent message mới, nó sẽ được xử lý theo thứ tự FIFO bình thường, không phải ưu tiên.
 
 > Thống nhất cú pháp
 > `trigger` ở cả 2 mode được xem xét làm một danh sách các trigger, mỗi trigger có thể là một signal hoặc một action. Khi trigger được kích hoạt, nếu `post_urgent` không NULL thì sẽ gửi urgent message mới; nếu NULL thì task sẽ tiếp tục xử lý queue hiện tại thêm một vòng nữa.
 
 ### OCE - Dịch vụ ngoài ngữ cảnh logic
 
-<!-- TODO
-  Cân nhắc loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+<!-- DEPRECATED - Old TASK
+Cân nhắc loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+-->
+
+<!-- REVIEW
+Hiện tại đang cân nhắc 1 trong 2 hướng:
+
+1. Loại bỏ hoàn toàn syntax cho OCE do bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`. OCE sẽ được triển khai trực tiếp trong core API, không cần khai báo trong μE-LS.
+2. Giữ syntax OCE trong μE-LS để thuận tiện cho việc khai báo các dịch vụ ngoài ngữ cảnh logic, nghĩa là các ocesvc được khai báo sẵn ở out-context, các tnorm có thể register trong context tương ứng thông qua actv-obj.c_call hoặc actv-obj.c_stmt. Cách này sẽ giúp người dùng dễ dàng quản lý các dịch vụ ngoài ngữ cảnh logic mà không cần phải viết code trực tiếp trong core.
 -->
 
 OCE (Out-Context Execution) là cơ chế được triển khai ở phiên bản 1.1.3 để hỗ trợ tnorm có thể thực hiện các dịch vụ ngoài ngữ cảnh logic (Out-Context Services) trong môi trường μE(DP)/-OS.
@@ -541,169 +537,45 @@ Trong core hiện tại, `ocesvc_register()` tự gán `uint8_t id`, vì vậy `
 
 OCE nên được dùng cho các việc như flush log, đồng bộ nền, hoặc dọn tài nguyên sau vòng scheduler chính. Nó không nên bị lẫn với task poll vì poll vẫn nằm trong path ứng dụng, còn OCE là service hậu trường của hệ thống.
 
-<!-- NOTE
-  Trong μE-LS, cú pháp hiện tại không hỗ trợ việc cho phép chỉ định service tiếp theo được gọi sau khi service hiện tại hoàn tất. Nếu muốn mở rộng, có thể thêm trường `next_service` hoặc `callback` để chỉ định service tiếp theo, nhưng hiện tại chưa có support trong core. Do đó, tính năng này sẽ được xem xét trong các phiên bản tương lai của μE-LS.
+<!-- DEPRECATED - Old NOTE
+Trong μE-LS, cú pháp hiện tại không hỗ trợ việc cho phép chỉ định service tiếp theo được gọi sau khi service hiện tại hoàn tất. Nếu muốn mở rộng, có thể thêm trường `next_service` hoặc `callback` để chỉ định service tiếp theo, nhưng hiện tại chưa có support trong core. Do đó, tính năng này sẽ được xem xét trong các phiên bản tương lai của μE-LS.
+-->
+
+<!-- STATUS
+Theo các tài liệu review về ocesvc.mexecjn trước đó, tính năng chỉ định service thực thi kế tiếp sẽ không được hỗ trợ hiện tại vì lộ trình thiết kế AOCE (Advanced Out-Context Execution) chưa được triển khai. Do đó, cú pháp μE-LS hiện tại chỉ hỗ trợ khai báo các dịch vụ ngoài ngữ cảnh logic dạng FCFS.
 -->
 
 ### Template tham chiếu tổng hợp
 
-<!-- TODO
-  Merge nhánh feat để đưa logic-testobj làm ví dụ tổng hợp cho template tham chiếu nhanh.
+<!-- TASK
+Merge nhánh feat để đưa logic-testobj làm ví dụ tổng hợp cho template tham chiếu nhanh.
 -->
 
-Khi cần một khung khai báo đầy đủ để tham chiếu nhanh, có thể dùng template sau. Các giá trị `NULL` hoặc placeholder chỉ mang tính gợi ý, người dùng thay thế theo bài toán thực tế.
-
-```yaml
-project: "uEDP"
-tlist:
-- tnorm: KID_TASK_USR
-  tsm:
-  - id: STATE_USR_IDLE
-    trans:
-      - sig: SIG_START
-        goto: STATE_USR_RUN
-    on_ntry: NULL
-    on_actv: NULL
-    on_exit: NULL
-  - id: STATE_USR_RUN
-    trans:
-      - sig: SIG_STOP
-        goto: STATE_USR_IDLE
-    on_ntry:
-      steps:
-        - actv: post_msg
-          to: KID_TASK_A
-          sig: SIG_A
-          data: NULL
-    on_actv:
-      steps:
-        - actv: log
-          to: KID_TASK_USR
-          sig: SIG_LOG
-          data: "Task is running"
-    on_exit:
-      steps:
-        - actv: log
-          to: KID_TASK_USR
-          sig: SIG_LOG
-          data: "Task is stopping"
-- tnorm: KID_TASK_A
-  fsm:
-  - id: STATE_A_IDLE
-    on_recv:
-      - sig: SIG_A
-        goto: STATE_A_BUSY
-        steps:
-          - actv: post_msg
-            to: KID_TASK_B
-            sig: SIG_B
-            data: NULL
-  - id: STATE_A_BUSY
-    on_recv:
-      - sig: SIG_B
-        goto: STATE_A_IDLE
-        steps:
-          - actv: post_msg
-            to: KID_TASK_USR
-            sig: SIG_DONE
-            data: NULL
-- tnorm: KID_TASK_SIMPLE
-  exec:
-    - on_sig: SIG_SIMPLE
-      steps:
-        - actv: post_msg
-          to: KID_TASK_A
-          sig: SIG_A
-          data: NULL
-
-- tpoll: KID_TASK_POLL
-  exec:
-    - actv: poll_led
-      to: NULL
-      sig: NULL
-      data: NULL
-
-isr:
-  - id: KID_ISR_TIMER
-    to: KID_TASK_TIM
-    sig: KID_SIG_TIM_TICK
-
-pplp:
-  itnlog:
-    level: ITNLOG_LEVEL_INFO
-    tag: ITNLOG_TAG_TSK
-    filter: enable
-      level: ITNLOG_LEVEL_FATAL
-      tag: ITNLOG_TAG_TSM
-    output: output_func
-  logdp:
-    register:
-    - func: sink_func_1
-    - func: sink_func_2
-  rprintf:
-  - contract: name // add name
-    init: init_func
-    putc: putc_func
-    write: write_func
-    is_ready: true
-  - contract: ...
-
-escal:
-  enabled: true
-  mode: slnf
-  trigger:
-    on_sig: SIG_CALL_URGENT
-    post_urgent:
-      to: KID_TASK_USR
-      sig: SIG_EXEC_URGENT
-      data: NULL
-
-outexec:
-  - name: OCE_ITNLOG_DUMP
-    handler: itnlog_dump
-    context: pplp_ctx
-    state: READY
-```
+<!-- STUB
+Sẽ thêm nội dung để hướng dẫn người dùng truy cập các logic-testobj do lộ trình bổ sung 1 folder riêng biệt của testobj cho project.
+-->
 
 ### Phân biệt `act`, `actv` và `steps`
 
-<!-- TODO
-  Loại bỏ toàn bộ mục này do không còn dùng `act` và `actv` nữa, chỉ giữ lại `steps` và `actv` trong các khai báo HSMC.
+<!-- DEPRECATED - Old TASK
+Loại bỏ toàn bộ mục này do không còn dùng `act` và `actv` nữa, chỉ giữ lại `steps` và `actv` trong các khai báo HSMC.
+#STATUS - DONE
 -->
 
-- `act` là một hành vi đơn lẻ, có thể là `post_msg`, `log`, `timer_set`, v.v. Nó được dùng trong `steps` của các khai báo non-HSMC, tức là sử dụng `exec`.
-- `actv` là một alias cho `act`, dùng để nhấn mạnh đây là hành vi đang được thực thi trong ngữ cảnh hiện tại của FSM/TSM. Nó có thể chứa các trường bổ sung như `to`, `sig`, `data` để xác định hành vi cụ thể. được sử dụng trong khai báo HSMC, tức là trong `on_ntry`, `on_actv`, `on_exit`, hoặc `on_recv`.
-- `steps` là một danh sách các hành vi (`actv`) được thực hiện tuần tự trong một ngữ cảnh cụ thể, như `on_ntry`, `on_actv`, `on_exit`, hoặc `on_recv`. Mỗi bước trong `steps` có thể là một hành vi đơn lẻ hoặc một hành vi phức tạp, tùy thuộc vào logic của task.
+// DOC
 
-> Kết luận đơn giản: `act` là hành vi cơ bản, `actv` là hành vi được thực thi trong ngữ cảnh cụ thể, `steps` là danh sách các hành vi được thực hiện theo thứ tự.
+Hiện tại section này sẽ không còn được dùng trong tài liệu chính thức, nhưng vẫn giữ lại để tham khảo cho các phiên bản trước đó để làm căn cứ nếu ở lộ trình phát triển tương lai cần quay lại.
 
 ### Quy tắc mapping action và payload
 
-<!-- TODO
-  Loại bỏ toàn bộ liên quan đến D2MP vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+<!-- DEPRECATED - Old TASK
+Loại bỏ toàn bộ liên quan đến D2MP vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
+#STATUS - DONE
 -->
 
-`actv` là discriminator của action, không phải nơi chứa toàn bộ câu lệnh C trong mọi trường hợp. Với built-in action được PLTF hỗ trợ, các tham số phải nằm ở các trường semantic tương ứng:
+// DOC
 
-```yaml
-- actv: post_msg
-  to: TASK_NORM_A
-  sig: SIG_USR_START
-  data:
-    value: GDA_SYSTEM_STATUS
-    type: const char*
-    mode: REF
-```
-
-Trong quy tắc này:
-
-- `to` và `sig` là tham số điều hướng message.
-- `data` chỉ là payload của message.
-- `data.value` là giá trị hoặc symbol được truyền.
-- `data.type` mô tả kiểu dữ liệu khi cần sinh thao tác `VAL`.
-- `data.mode` có thể là `REF` hoặc `VAL`; `ptype` dạng chuỗi cũ vẫn được hỗ trợ để tương thích.
-
-Không được dùng `data` để chứa danh sách tham số của một function call tùy ý. Với lệnh C chưa có built-in mapping, sử dụng escape hatch tường minh:
+Hiện tại sub-section về D2MP sẽ không còn được dùng trong tài liệu chính thức, nhưng vẫn giữ lại để tham khảo cho các phiên bản trước đó để làm căn cứ nếu ở lộ trình phát triển tương lai cần quay lại.
 
 ```yaml
 - actv:
@@ -722,7 +594,7 @@ Lưu ý rằng ở thời điểm hiện `args` chưa hỗ trợ để resolve a
 
 Ngoài ra, trong cấu trúc sử dụng mapping action với `c_stmt` và `c_call` cần đảm bảo tag `kind`, `function`, và `args` được khai báo với indent lùi vào sau `actv` để tránh lỗi YAML. Các trường hợp này cần được kiểm tra kỹ lưỡng trong quá trình codegen để đảm bảo tính nhất quán và tránh lỗi runtime.
 
-<!-- TODO
+<!-- DEPRECATED - Old TASK
 100826 - Cân nhắc thay đổi 2 keyword `act` và `actv` để tránh nhầm lẫn.
 110826 - Cân nhắc remove `cact` và chỉ dùng `steps` trong `on_recv` để thống nhất cú pháp. ~ Bổ sung task list để thực thi việc sửa đổi này. 
 #STATUS - DONE
@@ -783,33 +655,33 @@ tlist:
       ptype: VAL  # Chỉ định truyền tham trị, nếu muốn truyền tham chiếu thì dùng REF
 ```
 
-<!-- REVIEW
+<!-- DEPRECATED - Old TASK
 Cân nhắc thiết kế hoặc bổ sung thông tin trong tài liệu để làm rõ khi dùng `ptype: REF` thì ai sẽ thực thi quyền quản lý và kích thước dpool để copy dữ liệu từ biến toàn cục sang message. Cần đảm bảo rằng việc truyền tham chiếu và tham trị được thực hiện một cách an toàn và hiệu quả, tránh các vấn đề về đồng bộ hóa và quản lý bộ nhớ.
 
 #STATUS - DONE
 -->
 
-<!-- NOTE
+<!-- DEPRECATED - Old TASK
 Suy xét việc bổ sung thiết kế mới trong mã nguồn thêm 1 dpool hỗ trợ tính năng GDA (Global Data Area) để quản lý các biến toàn cục, đặc biệt là khi sử dụng `ptype: REF` để truyền tham chiếu. Điều này sẽ giúp đảm bảo rằng các task có thể truy cập và sử dụng dữ liệu toàn cục một cách an toàn và hiệu quả, đồng thời tránh các vấn đề về đồng bộ hóa và quản lý bộ nhớ. 
 
 Có thể cân nhắc đưa cho Minh trong việc thực thi.
 #STATUS - DONE
 -->
 
-<!-- SECTION - GDA
+<!-- DEPRECATED - Old TASK
 - Bổ sung vào tài liệu thiết kế 1 dpool riêng cho GDA để quản lý các biến toàn cục, đặc biệt là khi sử dụng `ptype: REF` để truyền tham chiếu. Điều này sẽ giúp đảm bảo rằng các task có thể truy cập và sử dụng dữ liệu toàn cục một cách an toàn và hiệu quả, đồng thời tránh các vấn đề về đồng bộ hóa và quản lý bộ nhớ.
 - Bổ sung 1 đoạn thông tin trong tài liệu để chỉ rõ quyền quản lý các biến toàn cục và truyền tham chiếu sẽ được thực hiện quản lý bởi ai, tính năng sẽ nằm trong phiên bản nào.
 
 Section này đã được review và cập nhật các task trong task list để thực hiện các thay đổi cần thiết trong mã nguồn và tài liệu từ phiên bản 1.1.6.
 
 #STATUS - DONE
-// !SECTION
 -->
 
-### Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`
+### Cập nhật thông tin từ `kconfigspec` và `pycdscriptor`
 
-<!-- TODO
-  Rename lại section này.
+<!-- DEPRECATED - Old TASK
+Rename lại section này.
+#STATUS - DONE
 -->
 
 Tầng khai báo Kconfig (`pltf/kconfigspec/usrinp.py` + `pltf/kconfigspec/tnorm.py`, sinh ra `sources/app/kconfig/decl.kconfig`) trước đây chỉ hỏi **một lần duy nhất** "Do you want to use FSM?" / "Do you want to use TSM?" kèm **một số lượng state dùng chung** cho toàn bộ `num_tasks_norm` task đã khai báo. Điều này không khớp với model μE-LS mô tả ở trên: mỗi `tnorm` trong `tlist` tự quyết định dùng `tsm` hay `fsm` (hoặc cả hai, hoặc không dùng cái nào), với số lượng state hoàn toàn độc lập theo độ dài mảng `tsm:`/`fsm:` khai báo riêng cho task đó.
