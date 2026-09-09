@@ -175,8 +175,9 @@ Lưu ý rằng cú pháp này dùng để làm ví dụ mẫu, không phải là
 
 Cú pháp μE-LS được thiết kế để mô tả các cấu trúc logic trong hệ thống μE(DP)/-OS, bao gồm các khối như Task, State Machine (TSM), Signal, Policy, và các hành động (Action Snippets). Các cấu hình như Pool, Queue và Timer được cấu hình tự động bởi Kconfig + pre-PLTF + Jinja2, do đó không cần khai báo trong μE-LS. Tuy nhiên, người dùng có thể tùy chỉnh các thông số này thông qua Kconfig.
 
-<!-- TASK
+<!-- DEPRECATED - Old TASK
 Cần rewrite lại phần này tương ứng với các khối phát triển đã có bên nhánh feat.
+#STATUS - DONE, đã đủ generic introduction trước khi đi vào chi tiết từng khối syntax.
 -->
 
 ### Hướng dẫn đọc nhanh
@@ -320,6 +321,26 @@ Bộ sinh code Python `pycdscriptor` đã hỗ trợ đầy đủ cho process-sy
 Ngoài ra actv-obj-post đã được loại bỏ hoàn toàn khỏi pydscriptor và tài liệu.
 -->
 
+#### Các lưu ý khi thiết kế logic với HSMC
+
+Nên vẽ sơ đồ trạng thái trước khi viết YAML để tránh nhầm lẫn giữa các tầng điều phối và logic chuyển trạng thái của tác vụ.
+
+Với TSM trên từng tác vụ, hãy xác định rõ theo thứ tự:
+
+- Tín hiệu đầu vào cần được cover ở `ot_ntry` và `il_ntry` để tránh bỏ sót tín hiệu.
+- Tín hiệu đầu ra cần được cover ở `actv` để đảm bảo hành vi logic được thực thi đúng theo thiết kế.
+- Các thao tác khác cần thực thi sẽ được cover ở `on_exit` để đảm bảo trạng thái được dọn dẹp đúng cách trước khi chuyển sang trạng thái tiếp theo.
+- Các trạng thái cần thao tác khóa chuyển trạng thái sẽ phải sử dụng các tín hiệu được mặc định define trong `uedp_core.h` để tránh các vấn đề lặp lại hoặc bỏ sót tín hiệu trong quá trình chuyển trạng thái.
+
+Với FSM, hãy xác định rõ theo thứ tự:
+
+- Các trạng thái cần có để xây dựng số lượng hàm tương ứng.
+- Các thao tác chuyển trạng thái ứng với từng hàm.
+
+Khi đó, TSM sẽ trở thành lớp quản lý chỉ báo trạng thái toàn cục của tác vụ trong khi FSM sẽ trở thành lớp quản lý hành vi logic của từng trạng thái. Việc tách biệt này giúp giảm thiểu sự phức tạp trong việc phát triển và bảo trì hệ thống.
+
+Mục này sẽ liên hệ với tài liệu thiết kế `docs/arch-design.md` để trình bày một cách liền lạc từ kiến trúc thiết kế API C-type đến cú pháp μE-LS, từ đó giúp người dùng dễ dàng hiểu và áp dụng trong việc phát triển hệ thống.
+
 ### PPLP - Cấu hình logging pipeline
 
 <!-- STATUS
@@ -396,14 +417,14 @@ pplp:
 
 -->
 
-<!-- TASK
+<!-- DEPRECATED - Old TASK
 Loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
 #STATUS - DONE
 -->
 
 ### APE - Lời gọi vượt quyền tạm thời
 
-<!-- DEPRECATED
+<!-- DEPRECATED - Old TASK
 Loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
 -->
 
