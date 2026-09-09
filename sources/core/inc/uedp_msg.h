@@ -36,11 +36,11 @@
 	 * @brief Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)
 	 */
 	typedef enum uedp_msg_type_t {
-			UEDP_MSG_TYPE_BLANK = 0,    /* Không data */
-			UEDP_MSG_TYPE_NORM,      		/* Data kích thước cố định (Pool) */
-			UEDP_MSG_TYPE_ALLOC,     		/* Data lớn (Heap/Large Pool) */
-			UEDP_MSG_TYPE_EXTAL,    			/* Tin nhắn từ interface */
-			UEDP_MSG_TYPE_ISR   			/* Tin nhắn từ ngữ cảnh ISR */
+		UEDP_MSG_TYPE_BLANK = 0,    /* Không data */
+		UEDP_MSG_TYPE_NORM,      		/* Data kích thước cố định (Pool) */
+		UEDP_MSG_TYPE_ALLOC,     		/* Data lớn (Heap/Large Pool) */
+		UEDP_MSG_TYPE_EXTAL,    			/* Tin nhắn từ interface */
+		UEDP_MSG_TYPE_ISR   			/* Tin nhắn từ ngữ cảnh ISR */
 	} uedp_msg_type_t;
 
 	/**
@@ -148,14 +148,6 @@
 	 * @param msg: Tin nhắn cần giảm số lượng tham chiếu
 	 */
 	void uedp_msg_ref_dec(uedp_msg_t* msg);
-
-	/**
-	 * @brief Sao chép dữ liệu vào tin nhắn
-	 * @param msg: Tin nhắn cần sao chép dữ liệu vào
-	 * @param data: Con trỏ đến dữ liệu cần sao chép
-	 * @param size: Kích thước dữ liệu cần sao chép
-	 */
-	void uedp_msg_set_data(uedp_msg_t* msg, const ui8* data, ui8 size);
 
 	/**
 	 * @brief Hàm nội bộ để khởi tạo Pool tin nhắn

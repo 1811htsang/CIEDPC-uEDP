@@ -6,7 +6,6 @@ from . import logic, misc, resrc
 
 from .logic import (
   C_act_obj,
-  C_data_obj,
   C_act_list_obj,
   C_trans_obj,
   C_trans_list_obj,

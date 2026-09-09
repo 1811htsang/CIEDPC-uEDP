@@ -1,35 +1,28 @@
-"""Generate application C source from post-logicdef models."""
-
 from pathlib import Path
 from typing import Any
-
 from jinja2 import Environment, FileSystemLoader
-
 from ...lstaxer.kre8 import build_generator_context
 
+# ANCHOR - add new random generator string
+from random import choices
+import string
 
 _TEMPLATE_DIR = Path(__file__).resolve().parents[3] / 'templates'
 _TEMPLATE_NAME = 'appc.txt'
 
+# DEPRECATED - _random_string will be removed from section of actv-obj-post removal
 
 def _actions(action_list: dict[str, Any] | None) -> list[dict[str, Any]]:
   if not action_list:
     return []
   return action_list.get('steps', [])
 
-
 def _c_symbol(value: str, suffix: str = '') -> str:
   if not value:
     return ''
   return value if value.endswith(suffix) or not suffix else f'{value}{suffix}'
 
-
-def _data_parts(action: dict[str, Any]) -> tuple[str, str | None, str | None]:
-  data = action.get('data')
-  if isinstance(data, dict):
-    return data.get('value', ''), data.get('type'), data.get('mode')
-  return data or '', None, action.get('ptype')
-
+# DEPRECATED - _data_parts will be removed from section of actv-obj-post removal
 
 def _resolve_task_symbol(value: str, task_symbols: set[str]) -> str:
   if value in task_symbols:
@@ -40,41 +33,23 @@ def _resolve_task_symbol(value: str, task_symbols: set[str]) -> str:
       return candidate
   return value
 
-
 def _emit_action(action: dict[str, Any], task_symbols: set[str]) -> str:
   kind = action.get('actv', '')
   if kind == 'c_stmt':
-    return action.get('code') or '/* c_stmt requires code. */'
+    return action.get('code') or '// CRITICAL - c_stmt requires specifying code segment.'
   if kind == 'c_call':
     function = action.get('function', '')
     args = ', '.join(action.get('args', []))
-    return f'{function}({args});' if function else '/* c_call requires function. */'
-  if kind in ('post_msg', 'uedp_post_msg', 'uedp_task_norm_post_msg'):
-    target = _resolve_task_symbol(action.get('to', ''), task_symbols)
-    signal = action.get('sig', '')
-    value, data_type, mode = _data_parts(action)
-    if not target or not signal:
-      return '/* post_msg requires to and sig. */'
-    if not value:
-      return '{ uedp_msg_t* msg = uedp_msg_alloc(%s, %s, 0u); if (msg) { uedp_task_norm_post_msg(%s, msg); } }' % (target, signal, target)
-    if str(mode).upper() == 'REF':
-      size = 'sizeof(void*)'
-      setter = f'uedp_msg_set_data_ref(msg, (void*)&{value});'
-    else:
-      size = f'sizeof({value})' if not data_type else f'sizeof({value})'
-      setter = f'uedp_msg_set_data(msg, (const ui8*)&{value}, (ui8){size});'
-    return '{ uedp_msg_t* msg = uedp_msg_alloc(%s, %s, %s); if (msg) { %s uedp_task_norm_post_msg(%s, msg); } }' % (target, signal, size, setter, target)
+    return f'{function}({args});' if function else '// CRITICAL - c_call requires specifying function call with parameters.'
+  # DEPRECATED - actv-obj-post removal update
   if action.get('code'):
     return action['code']
-  return f'/* action {kind} requires an explicit c_call or c_stmt schema. */'
-
+  return f'// CRITICAL - action {kind} requires an explicit c_call or c_stmt attribute. */'
 
 def _emit_actions(actions: list[dict[str, Any]], task_symbols: set[str]) -> list[str]:
   return [_emit_action(action, task_symbols) for action in actions]
 
-
 def build_appc_context(yaml_text: str) -> dict[str, Any]:
-  """Build the template context for the post-logicdef app.c artifact."""
   context = build_generator_context(yaml_text)
   resources = {
     item['id_symbol']: item for item in context['tnorm_resources']
@@ -90,7 +65,7 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
       prefix = f"{state_name}"
       tsm_states.append({
         'id': state_name,
-        'state_id': f'{state_name}_ID',
+        'state_id': f'{state_name}_ID' if state_name != 'UEDP_TSM_STATE_STAY' else 'UEDP_TSM_STATE_STAY',
         'state_value': f'(UEDP_TSM_STATE_MIN + UEDP_TSM_STATE_OFFSET + {state_index}u)',
         'entry_name': f'{prefix}_ntry',
         'active_name': f'{prefix}_onst',
@@ -100,10 +75,8 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
             'sig': transition['sig'],
             'goto': transition['goto'],
             'goto_value': (
-              'UEDP_TSM_STATE_STAY'
-              if transition['goto'] == 'STAY'
-              else f"({transition['goto']}_ID)"
-            ),
+              f"({transition['goto']}_ID)" if transition['goto'] != 'UEDP_TSM_STATE_STAY' else f"({transition['goto']})"
+            )
           }
           for transition in state.get('trans', {}).get('trans', [])
         ],
@@ -149,6 +122,7 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
 
   context['tnorm_codegen'] = tnorm_codegen
   task_resource_items = []
+  # TASK - Forgot to add priority levels to the task resource items, add task for this
   for index, resource in enumerate(context['tnorm_resources']):
     logic = next((item for item in context['tnorm_logic'] if item['task'] == resource['id_symbol']), {})
     task = next((item for item in tnorm_codegen if item['task'] == resource['id_symbol']), {})
@@ -202,20 +176,22 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
     for task in tnorm_codegen
     if task['fsm_states']
   )
+  # CRITICAL - Find any task containing USR, as the initial message to start the user task
+  usr_task = next((task for task in tnorm_codegen if 'USR' in task['task']), None)
+  if usr_task:
+    context['init_actions'].append(
+      f'uedp_msg_t* start_msg = uedp_msg_alloc({usr_task["task"]}, SIG_USR_START, 0u);\n  if (start_msg) {{\n    uedp_task_norm_post_msg({usr_task["task"]}, start_msg); \n  }}'
+    )
   return context
 
-
 def render_appc(yaml_text: str) -> str:
-  """Render post-logicdef YAML into complete app.c source text."""
   env = Environment(
     loader=FileSystemLoader(str(_TEMPLATE_DIR)),
     keep_trailing_newline=True,
   )
   return env.get_template(_TEMPLATE_NAME).render(**build_appc_context(yaml_text))
 
-
 def generate_appc(yaml_path: str | Path, output_path: str | Path) -> Path:
-  """Generate app.c from YAML without modifying the pre-logicdef pipeline."""
   output = Path(output_path)
   output.parent.mkdir(parents=True, exist_ok=True)
   yaml_text = Path(yaml_path).read_text(encoding='utf-8')
