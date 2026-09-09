@@ -452,7 +452,10 @@ Ngoài ra, một lưu ý thứ 3 cần đề cập:
 
 - [x] Remove toàn bộ syntax actv-obj-post trong thiết kế syntax gốc và giữ c_call hoặc c_stmt cho người sử dụng để giảm thiểu các vấn đề tương thích với các API khác trong lõi μEDP.
 - [x] Sửa đổi tài liệu thiết kế syntax với các thay đổi mới và cập nhật trạng thái cho các task cũ.
-- [ ] Merge nhánh feat vào nhánh docs kèm thay đổi về folder mới chứa các test-obj và đường dẫn trong tài liệu thiết kế syntax.
+- [x] Merge nhánh feat vào nhánh docs kèm thay đổi về folder mới chứa các test-obj và đường dẫn trong tài liệu thiết kế syntax.
+- [X] Remove `test` khỏi gitignore để đưa các testobj vào quản lý trong git.
+- [x] Bổ sung README.md cho testobj folder để hướng dẫn naming convention và purposes.
+- [ ] Bổ sung scripting để tự động append các testobj vào lstaxizer.yaml để tăng khả năng tự động hóa quy trình làm việc.
 - [ ] Bổ sung tài liệu hướng dẫn thiết kế logic-testobj trên test và product-in-use để tránh các vấn đề hiểu sai logic thực thi trong tương lai ở cả mặt test lẫn product-in-use.
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên phy-testobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118

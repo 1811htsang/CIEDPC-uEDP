@@ -64,7 +64,7 @@ sources/test/*/build/
 .vscode/settings.json
 
 # Test build folder
-sources/test/*
+# CRITICAL - Test Folder -> Allow test folder to be saved to version control due to new policy on testobj.
 
 # Python cache
 sources/common/kconfiglib/__pycache__/*
