@@ -210,7 +210,7 @@ Trong μE-LS, mỗi task được khai báo trong danh sách `tlist`. Một task
 
 Tuy nhiên, sự nhập nhằng giữa non-HSMC tnorm (sử dụng `exec`) và tpoll sẽ xảy ra với cú pháp chỉ sử dụng `task`. Do đó, ở tag tổng đại diện cho entry của từng task trong `tlist` sẽ bổ sung thêm 2 loại tag là `tnorm` và `tpoll` để phân biệt rõ ràng.
 
-Về tổng quát, một task Norm nên được viết theo cấu trúc sau:
+Về tổng quát, một `tnorm` nên được viết theo cấu trúc sau:
 
 ```yaml
 project: "uEDP"
@@ -321,6 +321,8 @@ Bộ sinh code Python `pycdscriptor` đã hỗ trợ đầy đủ cho process-sy
 Ngoài ra actv-obj-post đã được loại bỏ hoàn toàn khỏi pydscriptor và tài liệu.
 -->
 
+Trong thiết kế ban đầu, các action object - `actv-obj` được thiết kế tương thích với tính năng của post_message trong core API, trong một số tài liệu sẽ có naming convention tương ứng là `actv-obj-post`. Tuy nhiên, thông qua kiểm tra SIL vir-testobj Linux, các `actv-obj-post` đã bộc lộ nhược điểm cứng nhắc và không tương thích với các API đa dụng khác, do đó đã được loại bỏ hoàn toàn khỏi `pycdscriptor` và tài liệu. Thay vào đó, các actv-obj được thiết kế để tương thích với cú pháp C-type, cho phép người dùng viết trực tiếp các đoạn mã C trong YAML hoặc gọi chỉ định hàm với parameter tương ứng. Điều này giúp tăng tính linh hoạt và khả năng mở rộng của μE-LS.
+
 #### Các lưu ý khi thiết kế logic với HSMC
 
 Nên vẽ sơ đồ trạng thái trước khi viết YAML để tránh nhầm lẫn giữa các tầng điều phối và logic chuyển trạng thái của tác vụ.
@@ -346,6 +348,10 @@ Mục này sẽ liên hệ với tài liệu thiết kế `docs/arch-design.md` 
 <!-- STATUS
 Hiện tại `pycdscriptor` chưa hỗ trợ sinh cấu hình PPLP, nhưng core đã hỗ trợ đầy đủ các API liên quan đến logging pipeline.
 Trong thiết kế thì PPLP có cấu hình riêng biệt với process-syntax nên có thể tích hợp module riêng để sinh code PPLP từ YAML.
+-->
+
+<!-- TASK
+Cân nhắc đưa lộ trình hỗ trợ PPLP vào roadmap của μE-LS ở phiên bản 1.1.7/1.1.8 cùng với APE.
 -->
 
 PPLP khai báo chính sách logging cho Core và backend xuất log. Trong runtime, `itnlog` chỉ giữ filter và callback output; việc flush ra console, UART hoặc file nên đi qua OCE hoặc callback đã đăng ký.
@@ -431,6 +437,17 @@ Loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có t
 <!-- REVIEW
 Trong thiết kế lõi, chưa tính đến trường hợp `tnorm` gọi APE trong TSM hoặc out-context của `tsm_dispatch()` và cả `pycdscriptor` chưa hỗ trợ sinh code cho APE. 
 Do đó, cần review lại tính cần thiết của syntax này với use-case sử dụng trên API C-type gốc trước khi quyết định giữ lại hay loại bỏ hoàn toàn.
+-->
+
+<!-- STATUS - IN-PROGRESS
+Đề xuất thiết kế mới cho APE như sau:
+
+1. Giữ lại cú pháp APE trong μE-LS nhưng đưa level của syntax lên mức toàn cục cho tác vụ, nghĩa là trước khi bất kỳ logic nào được thực thi, bao gồm cả `tsm`, `fsm` và `exec`, APE sẽ được đăng ký trigger và tác động trước như một interferencer bảo vệ logic lẫn quyền ưu tiên.
+2. Cho phép APE trong actv-obj của logic `tsm`, `fsm` và `exec`, nghĩa là người dùng có thể sử dụng với `c_call` và `c_stmt` để gọi APE cho chính mình hoặc cho các tnorm khác, miễn là không bị báo lỗi.
+-->
+
+<!-- TASK
+Cân nhắc đưa lộ trình hỗ trợ APE vào roadmap của μE-LS ở phiên bản 1.1.7/1.1.8.
 -->
 
 APE hay S-LnF APE là cơ chế được triển khai ở phiên bản 1.1.0 và 1.1.1 để hỗ trợ tnorm có thể gọi các hàm vượt quyền tạm thời (Privilege Escalation) trong môi trường μE(DP)/-OS. Trong μE-LS, APE là khai báo cục bộ theo từng tnorm: mỗi task có thể tự định nghĩa trigger APE cho chính nó, và Core chỉ cung cấp cơ chế thực thi tương ứng qua `uedp_task_norm_post_urgent()` và `uedp_task_norm_set_urgent()`.
@@ -531,11 +548,11 @@ Khi dùng `mode: non-slnf`, tnorm không bắt buộc phải tự gửi một ur
 > Thống nhất cú pháp
 > `trigger` ở cả 2 mode được xem xét làm một danh sách các trigger, mỗi trigger có thể là một signal hoặc một action. Khi trigger được kích hoạt, nếu `post_urgent` không NULL thì sẽ gửi urgent message mới; nếu NULL thì task sẽ tiếp tục xử lý queue hiện tại thêm một vòng nữa.
 
-### OCE - Dịch vụ ngoài ngữ cảnh logic
-
 <!-- DEPRECATED - Old TASK
 Cân nhắc loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
 -->
+
+### OCE - Dịch vụ ngoài ngữ cảnh logic
 
 <!-- REVIEW
 Hiện tại đang cân nhắc 1 trong 2 hướng:
