@@ -76,7 +76,6 @@
 
 	/**
 	 * @brief Hàm để chuyển đổi trạng thái của FSM
-	 * 
 	 * @param me chỉ trạng thái hiện tại của FSM
 	 * @param target chỉ hàm xử lý trạng thái mục tiêu mà FSM sẽ chuyển đến
 	 */
@@ -84,7 +83,6 @@
 
 	/**
 	 * @brief Hàm để quay lại trạng thái trước đó của FSM dựa trên lịch sử đã lưu
-	 * 
 	 * @param me chỉ trạng thái hiện tại của FSM, hàm sẽ sử dụng thông tin trong `history` để quay lại trạng thái trước đó
 	 */
 	void uedp_fsm_go_back(uedp_fsm_t* me);

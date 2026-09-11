@@ -218,25 +218,26 @@ Khi bắt đầu, `tsm_init()` được gọi để thiết lập trạng thái 
 Do đó, khi thiết kế hệ thống, cần đảm bảo rằng các task có mức độ ưu tiên phù hợp để tránh tình trạng loop hoặc sai logic.
 
 ```asciidoc
-              #all                   ║
-              ┌──────────┐ [in]      ║ > tsm_init
-              │  ot_ntry │           ║
-              └────┼─────┘           ║
-    -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
-            #cur ┌─┴──┐[out][on]     ║
-          ┌──────┼actv┼──────┐       ║ > tsm_dispatch
-          │      └────┘      │       ║
-    -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
-          │                  │  #nxt ║
-        ┌─┼──┐           ┌───┼───┐   ║
-   #cur │exit┼───────────┼il_ntry│   ║ > tsm_trans
-        └────┘           └───────┘   ║
-          [on]                 [in]  ║
-                                     ║
+                    #all                   ║
+                    ┌──────────┐ [in]      ║ > tsm_init
+                    │  ot_ntry │           ║
+                    └────┼─────┘           ║
+          -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
+                  #cur ┌─┴──┐[out][on]     ║
+                ┌──────┼actv┼──────┐       ║ > tsm_dispatch
+                │      └────┘      │       ║
+          -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
+                │                  │  #nxt ║
+              ┌─┼──┐           ┌───┼───┐   ║
+         #cur │exit┼───────────┼il_ntry│   ║ > tsm_trans
+              └────┘           └───────┘   ║
+                [on]                 [in]  ║
+                                           ║
 ```
 
-<!-- TODO
-  Bổ sung mẹo sử dụng HSMC trong syntax của PLD/μE-LS.
+<!-- DEPRECATED - Old TASK
+Bổ sung mẹo sử dụng HSMC trong syntax của PLD/μE-LS.
+#STATUS - DONE
 -->
 
 #### FSM - Finite State Machine
