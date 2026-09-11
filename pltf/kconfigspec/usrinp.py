@@ -1,10 +1,3 @@
-# Function to get user input for task generation parameters
-# Task generation parameters include:
-# - Number of tasks norm to generate
-# - Number of tasks poll to generate
-# - Number of signals to generate
-# - Per-task: whether task uses FSM/TSM, and how many states each uses
-# - Number of Hardware API need to be generated (if Hardware API is used)
 def user_input(DEFAULT_VALS):
   # NOTE - Number of tasks to generate
   print(f'[INFO] Number of tasks norm to generate (default: {DEFAULT_VALS["num_tasks_norm"]}): ', end='')
@@ -21,9 +14,12 @@ def user_input(DEFAULT_VALS):
   val = input().strip()
   num_signals = int(val) if val != '' else DEFAULT_VALS["num_signals"]
 
-  # NOTE - Ask FSM/TSM usage & state count PER TASK, so each norm task can
-  # independently opt into FSM/TSM with its own number of states, instead of
-  # a single global flag/count shared by every task.
+  # NOTE
+  '''
+  Ask FSM/TSM usage & state count PER TASK, so each norm task can
+  independently opt into FSM/TSM with its own number of states, instead of
+  a single global flag/count shared by every task.
+  '''
   fsm_flags = []
   tsm_flags = []
   num_fsm_states_list = []
@@ -60,6 +56,9 @@ def user_input(DEFAULT_VALS):
     val = input().strip()
     num_hw_api = int(val) if val != '' else DEFAULT_VALS["num_hw_api"]
 
-  # NOTE - Return type: tsm/fsm flags và state counts giờ là list, mỗi phần tử
-  # tương ứng với 1 task norm (list[i-1] ứng với task #i).
+  # NOTE
+  '''
+  Return type: tsm/fsm flags và state counts giờ là list, mỗi phần tử
+  tương ứng với 1 task norm (list[i-1] ứng với task #i).
+  '''
   return num_tasks_norm, num_tasks_poll, num_signals, fsm_flags, tsm_flags, num_tsm_states_list, num_fsm_states_list, num_hw_api

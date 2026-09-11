@@ -1,7 +1,5 @@
 import os
-
 from jinja2 import Environment, FileSystemLoader
-
 
 def main(context):
   cur_trm_dir = os.path.dirname("uEDP")

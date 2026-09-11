@@ -3,10 +3,6 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader
 from ...lstaxer.kre8 import build_generator_context
 
-# ANCHOR - add new random generator string
-from random import choices
-import string
-
 _TEMPLATE_DIR = Path(__file__).resolve().parents[3] / 'templates'
 _TEMPLATE_NAME = 'appc.txt'
 
@@ -122,7 +118,7 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
 
   context['tnorm_codegen'] = tnorm_codegen
   task_resource_items = []
-  # TASK - Forgot to add priority levels to the task resource items, add task for this
+  # DEPRECATED - Old TASK - Forgot to add priority levels to the task resource items, add task for this
   for index, resource in enumerate(context['tnorm_resources']):
     logic = next((item for item in context['tnorm_logic'] if item['task'] == resource['id_symbol']), {})
     task = next((item for item in tnorm_codegen if item['task'] == resource['id_symbol']), {})

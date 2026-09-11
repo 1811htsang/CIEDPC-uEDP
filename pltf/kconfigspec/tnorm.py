@@ -1,33 +1,13 @@
-# Function to generate blank task poll declarations based on user input for kconfig
-# Task declarations include:
-# - Task name
-# - Task priority
-# - Task message queue name
-# - Task handler name
-# - Task TSM use flag
-# - Task TSM name
-# - Task TSM state name
-# - Task FSM use flag
-# - Task FSM name
-# - Task FSM state name
-# Function to generate blank task poll declarations based on user input for kconfig
-# Task declarations include:
-# - Task name
-# - Task priority
-# - Task message queue name
-# - Task handler name
-# - Task TSM use flag
-# - Task TSM name
-# - Task TSM state name
-# - Task FSM use flag
-# - Task FSM name
-# - Task FSM state name
 def task_norm_declaration(num_tasks_norm, num_tsm_states_list, num_fsm_states_list, tsm_flags, fsm_flags):
   # NOTE - Generate task declarations in Kconfig format
-  # RESOLVED - Mỗi task giờ có thể khai báo dùng FSM/TSM riêng biệt (tsm_flags[i-1],
-  # fsm_flags[i-1]) kèm số lượng state riêng (num_tsm_states_list[i-1],
-  # num_fsm_states_list[i-1]) thay vì dùng chung 1 cờ + 1 số lượng cho toàn bộ
-  # task norm. Dữ liệu này được thu thập theo từng task trong usrinp.user_input().
+  # STATUS
+  '''
+  Mỗi task giờ có thể khai báo dùng FSM/TSM riêng biệt (tsm_flags[i-1],
+  fsm_flags[i-1]) kèm số lượng state riêng (num_tsm_states_list[i-1],
+  num_fsm_states_list[i-1]) thay vì dùng chung 1 cờ + 1 số lượng cho toàn bộ
+  task norm. Dữ liệu này được thu thập theo từng task trong usrinp.user_input().
+  '''
+
   kconfig_content = []
   kconfig_content.append('menu "Task Norm configuration"\n')
 
