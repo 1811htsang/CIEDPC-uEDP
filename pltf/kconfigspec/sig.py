@@ -1,7 +1,3 @@
-# Function to generate blank signal declarations based on user input for kconfig
-# Signal declarations include:
-# - Signal name
-# - Signal value (auto generated from 0x01u, 0x02u, ... to 0xFFu)
 def signal_declaration(num_signals):
   # NOTE -Generate signal declarations in Kconfig format
   kconfig_content = []

@@ -1,8 +1,3 @@
-# Function to generate blank task poll declarations based on user input for kconfig
-# Task poll declarations include:
-# - Task poll name
-# - Task poll ability
-# - Task poll handler (auto generated based on task poll name)
 def task_poll_declaration(num_tasks_poll):
   # NOTE - Generate task declarations in Kconfig format
   kconfig_content = []
