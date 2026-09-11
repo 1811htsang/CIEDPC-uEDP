@@ -1,5 +1,3 @@
-"""Build a generator-ready intermediate representation from validated YAML models."""
-
 from dataclasses import dataclass
 from typing import Any
 import yaml
@@ -16,11 +14,8 @@ from .lukupmodel import (
 	lukupmodel_tpoll_resrc,
 )
 
-
 @dataclass(frozen=True)
 class Kre8Project:
-	"""Canonical input for the code-generation phase."""
-
 	signals: list[Any]
 	tnorm_resources: list[Any]
 	tpoll_resources: list[Any]
@@ -31,7 +26,6 @@ class Kre8Project:
 	outexec: list[Any]
 
 	def to_generator_context(self) -> dict[str, Any]:
-		"""Return JSON-like data suitable for Jinja2 templates."""
 		return {
 			'signals': [_model_to_dict(item) for item in self.signals],
 			'tnorm_resources': [_model_to_dict(item) for item in self.tnorm_resources],
@@ -43,18 +37,14 @@ class Kre8Project:
 			'outexec': [_model_to_dict(item) for item in self.outexec],
 		}
 
-
 def _model_to_dict(model: Any) -> dict[str, Any]:
-	"""Dump a Pydantic model while removing optional empty fields."""
 	return model.model_dump(
 		by_alias=True,
 		exclude_none=True,
 		exclude_defaults=True,
 	)
 
-
 def build_project_ir(yaml_text: str) -> Kre8Project:
-	"""Run lukupmodel once and assemble the complete code-generation IR."""
 	return Kre8Project(
 		signals=lukupmodel_sig_resrc(yaml_text),
 		tnorm_resources=lukupmodel_tnorm_resrc(yaml_text),
@@ -66,9 +56,7 @@ def build_project_ir(yaml_text: str) -> Kre8Project:
 		outexec=lukupmodel_outexec_logic(yaml_text),
 	)
 
-
 def build_generator_context(yaml_text: str) -> dict[str, Any]:
-	"""Convenience API for generators that only need a template context."""
 	return build_project_ir(yaml_text).to_generator_context()
 
 # STUB - Add sample usage to testing the build_project_ir and build_generator_context functions
