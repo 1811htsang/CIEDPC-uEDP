@@ -1,6 +1,5 @@
 import os
 
-
 def main(context):
   cur_trm_dir = os.path.dirname("uEDP")
   arch_dir = "sources/pal/arch"
