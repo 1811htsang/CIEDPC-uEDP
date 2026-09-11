@@ -283,10 +283,14 @@ Ngoài ra, các tính năng nâng cao như lọc tin nhắn theo topic, QoS (Qua
 
 //  !SECTION
 
+### Phiên bản 1.1.7: The baseline for PLTF.TSD/TLC && Phiên bản 1.1.8: The incremental step for Testing
+
 //  SECTION - v1.1.7 & v1.1.8
 
-- [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8. //TASK - Đã thống nhất đưa vào lộ trình phát triển của phiên bản 1.1.7
-- [ ] Bổ sung khả năng phân giải pplp vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8. //TASK - Đã thống nhất đưa vào lộ trình phát triển của phiên bản 1.1.7
+- [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8.
+- [ ] Bổ sung khả năng phân giải pplp vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [ ] Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [ ] Thêm trường priority vào trong syntax của task để hỗ trợ việc phân giải mức độ ưu tiên của task trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 
 //  !SECTION
 
