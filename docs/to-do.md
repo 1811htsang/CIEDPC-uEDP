@@ -508,6 +508,7 @@ Loại bỏ task bên trên do tính năng file inclusion là tính năng specif
 -->
 
 - [x] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //DEPRECATED - Không cần rewrite do đã đủ generic introduction.
+- [ ] Remove ISR support trong syntax including pydantic_model, example, pycdscriptor.
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table - pycdscriptor.ustab) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này.
