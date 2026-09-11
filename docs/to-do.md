@@ -161,9 +161,9 @@ Tức là có 1 space trước dấu `//` và 1 space trước dấu `!SECTION`,
 
 //  SECTION - v1.1.6
 
-//NOTE - Phiên bản này được lựa chọn để triển khai các vấn đề còn tồn đọng từ phiên bản 1.1.5, các đề xuất dự trù để hoàn thiện tính năng cũ.
+//NOTE - Phiên bản này được lựa chọn để triển khai các vấn đề còn tồn đọng từ phiên bản 1.1.5 đồng thời thực hiện các tinh chỉnh về mặt kiến trúc thiết kế, API C-type hay tài liệu, các đề xuất dự trù để hoàn thiện tính năng cũ.
 
-//NOTE - Ở phiên bản này sẽ bắt đầu bổ sung việc phân nhánh phát triển tính năng theo từng phiên bản số hiệu hoặc tên gọi đặc biệt để tránh việc lẫn lộn các tính năng của từng phiên bản với nhau. Cân nhắc bổ sung việc phân tách nhánh `feat` theo từng người phát triển để tránh xung đột khi merge code vào nhánh chính `main`.
+//DEPRECATED - Ở phiên bản này sẽ bắt đầu bổ sung việc phân nhánh phát triển tính năng theo từng phiên bản số hiệu hoặc tên gọi đặc biệt để tránh việc lẫn lộn các tính năng của từng phiên bản với nhau. Cân nhắc bổ sung việc phân tách nhánh `feat` theo từng người phát triển để tránh xung đột khi merge code vào nhánh chính `main`.
 
 - [x] Bổ sung tài liệu mô tả thiết kế kiến trúc (ver eng) để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
 - [x] Triển khai tài liệu thiết kế các tính năng từ KwDI sang PLTF để hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn. //NOTE - Đã trình bày với phiên bản 1.0 và cung cấp các đề xuất mới để cập nhật cho phiên bản 1.2.0.
@@ -207,9 +207,12 @@ Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiệ
 -->
 
 - [x] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA. //NOTE - Ở task, yêu cầu cụ thể là sửa đổi tài liệu tương ứng.
-- [ ] Sửa đổi và cập nhật thiết kế PLD/μE-LS tương ứng với sự thay đổi của kconfigspec.usrinp và kconfigspec.tnorm //NOTE - Ở task này, yêu cầu cụ thể là bổ sung sửa đổi tài liệu tương ứng.
-- [ ] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
-- [ ] Bổ sung phiên bản tiếng anh của `user-manual` để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
+- [x] Sửa đổi và cập nhật thiết kế PLD/μE-LS tương ứng với sự thay đổi của kconfigspec.usrinp và kconfigspec.tnorm //NOTE - Ở task này, yêu cầu cụ thể là bổ sung sửa đổi tài liệu tương ứng.
+- [x] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
+- [x] Bổ sung phiên bản tiếng anh của `user-manual` để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
+- [x] Bổ sung sửa đổi tài liệu thiết kế PLTF bản EN và VN. //NOTE - Ở task này là kiểm tra sửa đổi tài liệu thiết kế PLTF bản EN và VN theo các thay đổi về module name và thiết kế logic của các module.
+- [x] Kiểm tra lại các thay đổi mới trong tài liệu cú pháp sau hiệu chỉnh của bên nhánh chore để đảm bảo documentation và source code được đồng bộ và nhất quán. //NOTE - Follow theo commit số `bab87c3dece35ccfcb71888f1086b1c45fa0b4f7` của nhánh chore.
+- [ ] Hỗ trợ newcomer trong việc nắm bắt các thay đổi mới trong tài liệu cú pháp và source code của dự án μEDP, bao gồm việc giải thích các thay đổi về module name, thiết kế logic của các module và các hướng dẫn phát triển chi tiết để giúp newcomer hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng mới trong việc phát triển ứng dụng trên nền tảng μEDP. //NOTE - Minh sẽ thực hiện hướng dẫn.
 - [ ] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [ ] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
@@ -219,6 +222,7 @@ Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được c
 -->
 
 - [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
+- [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
 <!-- NOTE - Expectation b4 BST task
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
@@ -230,14 +234,59 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 3. Hỗ trợ việc triển khai testing với các phiên bản sau đó một cách dễ dàng và hiệu quả hơn, đồng thời đảm bảo hỗ trợ cho các nhân sự mới tham gia vào dự án có thể nhanh chóng nắm bắt và thực hiện các công việc liên quan.
 -->
 
-- [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
-- [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc phát triển các ứng dụng phức tạp với nhiều tác vụ tương tác với nhau một cách linh hoạt hơn.
-- [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một sự kiện có thể phát tới nhiều task đã đăng ký.
+<!-- STATUS
+Theo lộ trình hiện tại đã hoàn tất các task liên quan đến PLD/μE-LS, đã có BST trên vir-testobj-v0 với uutobj Linux, còn thiếu việc bổ sung BST trên các phy-uutobj khác như STM32, ESP32, v.v. để đảm bảo rằng các tính năng được phát triển pre-1.2.0 đều được kiểm thử đầy đủ trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
 
-//REVIEW - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
-//NOTE - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
+Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST-v1.1.5 để bảo vệ các tính năng đã phát triển để chuẩn bị rebase sub-tasklist từ v1.2.0 lên v1.1.6. 
+-->
+
+- [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+- [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
+- [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
+
+<!-- SECTION - PSE
+
+#TASK - Minh nên bổ sung thêm 1 tài liệu review về ý tưởng cho PSE tại docs/review/pse.md để thống nhất các ý tưởng và đề xuất cải tiến cho Pub/Sub engine của μEDP.
+
+#DEPRECATED - Old TASK - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+
+#CRITICAL - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
+
+#NOTE - Idea cho PSE, có thể sửa đổi hoặc bổ sung thêm sau đó
+Hiện tại trong API C-type thì 1 msg sẽ có 2 trường liên quan đến địa chỉ của task là `src_task_id` và `des_task_id`, do đó có thể đề xuất hướng nâng cấp như sau:
+
+- Đưa `des_task_id` thành một danh sách các task ID để hỗ trợ việc gửi tin nhắn tới nhiều task đã đăng ký, với số lượng task ID có trong danh sách thì tương ứng ref_count sẽ phải có giá trị tương đương để quản lý việc giải phóng bộ nhớ của tin nhắn một cách chính xác và hiệu quả.
+
+Ngoài ra thì theo thiết kế gốc, tin nhắn được allocate từ một pool duy nhất, sau đó thì mới gửi đến sử dụng cho các task, nghĩa là chỉ cần 1 lần allocate duy nhất đã được đảm bảo để giữ tin nhắn tồn tại cho đến khi tất cả các task đã nhận được tin nhắn và giải phóng bộ nhớ của tin nhắn. 
+
+Do đó, mỗi khi 1 task gửi tin nhắn có số lượng ref_count > 1 thì trước hết chúng phải xử lý như sau:
+
+- Allocate 1 message
+- Khai báo số lượng task ID trong danh sách des_task_id và giá trị ref_count tương ứng
+- Fill-up task ID của những task cần gửi tin nhắn
+- Thực hiện gửi tham chiếu tin nhắn
+
+Ở đây, như đã đề cập thì do 1 tin nhắn được allocate từ 1 pool duy nhất, do đó khi gửi tin nhắn thì chỉ cần gửi tham chiếu của tin nhắn đến các task đã đăng ký, và mỗi task sẽ nhận được cùng 1 tham chiếu của tin nhắn. Khi task nhận được tin nhắn, nó sẽ giảm giá trị ref_count của tin nhắn đi 1 đơn vị. Khi ref_count giảm về 0, tức là tất cả các task đã nhận được tin nhắn và giải phóng bộ nhớ của tin nhắn.
+
+Việc sử dụng truyền tham chiếu tin nhắn thay vì copy tin nhắn sẽ giúp giảm thiểu việc sử dụng bộ nhớ và tăng hiệu suất của hệ thống, đồng thời đảm bảo rằng các task nhận được cùng 1 thông tin từ tin nhắn mà không cần phải tạo ra nhiều bản sao của tin nhắn.
+
+#REVIEW - Giới hạn hỗ trợ của PSE
+
+Ở thời điểm hiện tại, đề xuất PSE sẽ chỉ hỗ trợ việc gửi tin nhắn tới nhiều task đã đăng ký, nhưng không hỗ trợ việc gửi tin nhắn tới các task chưa đăng ký. Điều này có nghĩa là các task cần phải đăng ký trước khi nhận được tin nhắn từ Pub/Sub engine, nhằm đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
+
+Ngoài ra, các tính năng nâng cao như lọc tin nhắn theo topic, QoS (Quality of Service), v.v. sẽ được cân nhắc để triển khai trong các phiên bản sau của μEDP, nhằm đảm bảo rằng Pub/Sub engine có thể đáp ứng được các yêu cầu của các ứng dụng phức tạp hơn trong tương lai.
+
+//  !SECTION
+-->
 
 - [ ] Ra mắt phiên bản 1.1.6 của lõi μEDP với đầy đủ tính năng PLD/μE-LS, Pub/Sub engine và tài liệu hướng dẫn sử dụng.
+
+//  !SECTION
+
+//  SECTION - v1.1.7 & v1.1.8
+
+- [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8. //TASK - Đã thống nhất đưa vào lộ trình phát triển của phiên bản 1.1.7
+- [ ] Bổ sung khả năng phân giải pplp vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8. //TASK - Đã thống nhất đưa vào lộ trình phát triển của phiên bản 1.1.7
 
 //  !SECTION
 
@@ -282,48 +331,27 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 
 <!-- REVIEW
 1. Bổ sung cân nhắc phân tách PLD/μE-LS thành SA (semi-automation) và FA (full-automation) trên 2 phiên bản 1.1.7, 1.1.8 hay 1.1.8, 1.1.9.
+
+# STATUS - PLD/μE-LS đã hoàn thiện triển khai FA nên không cần phân tách SA/FA nữa.
+
 2. Cân nhắc đưa triển khai kết quả sau khi cleanup NULL vào pydantic model để chuẩn hóa toàn bộ logic triển khai trước khi translate thành mã C.
 3. Cần review lại thiết kế cú pháp ở khu vực data để quản lý chi tiết vấn đề chuyển data-as-parameter thành data-as-global đối với các tham số truyền vào có sizeof() hoặc length nặng hoặc multiple param trong 1 function call.
 -->
 
-- [x] Đưa calling của pycdscriptor.generator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
+- [x] Đưa calling của pycdscriptor.jnerator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
 - [x] Triển khai thiết kế lstaxer.kre8 để hỗ trợ việc generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Bổ sung rewrite cú pháp giải quyết vấn đề ambiguous data tag lên apps/lstaxizer.yaml để thực hiện regression test cho pipeline.
-- [ ] Thực hiện chore filename để thống nhất các module riêng biệt của PLTF.
-- [ ] Sửa đổi vị trị ustab.custab trong pipeline trên entrypoint.sh
-- [ ] Bổ sung khả năng kiểm tra theo syntax mới của PLD/μE-LS trên lstaxer.vlid.
-- [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax.
-- [ ] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing. //CRITICAL - Xem xét loại bỏ khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
-- [ ] Bổ sung sửa đổi tài liệu thiết kế PLTF.
-- [ ] Kiểm tra lại các thay đổi mới trong tài liệu cú pháp sau hiệu chỉnh của bên nhánh chore để đảm bảo documentation và source code được đồng bộ và nhất quán. //NOTE - Follow theo commit số `bab87c3dece35ccfcb71888f1086b1c45fa0b4f7` của nhánh chore.
-- [ ] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Thực hiện chore filename để thống nhất các module riêng biệt của PLTF.
+- [x] Sửa đổi vị trí ustab.custab trong pipeline trên entrypoint.sh nằm giữa jnerator.pregen.fpregen và jnerator.postgen.cgen. //CRITICAL - Follow theo task bên dưới sẽ đưa ustab.custab nằm cuối pipeline.
+- [x] Phân tách entrypoint.sh để đưa jnerator.postgen.cgen và lstaxer.vlid vào jainerator.sh thành một pipeline riêng biệt.
+- [x] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing. //CRITICAL - Xem xét loại bỏ khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- STATUS
-Trong thiết kế trước đó:
-- pycdscriptor.generator được triển khai để sinh ra toàn bộ các cấu hình khai báo bắt buộc cho apps/lstaxizer.yaml
-- pycdscriptor.ustab được dùng để sinh ra bộ cấu hình tham chiếu cho logic. 
-- Các triển khai chưa được thêm vào chính là lstaxer.vlid (chứa pipeline từ lstaxer.strucjec đến lstaxer.symresolv) và sử dụng lstaxer.pydantic_model để mapping cấu hình sang parse-able state.
-
-Hiện tại: 
-- pycdscriptor.generator được phân tách thành 2 phần là generator.pregen và generator.postgen để phân biệt các cấu hình được sinh ra trước khi định nghĩa logic và sau khi định nghĩa logic. 
-- lstaxer.lukupmodel được bổ sung để triển khai đưa toàn bộ các cấu hình YAML thành parse-able state pydantic model. 
-- lstaxer.kre8 được hoàn thiện triển khai cùng với generator.pos_logicdef để phối hợp triển khai sinh ra các mã nguồn C hoàn chỉnh.
-- Vấn đề nhập nhằng trong data đã được giải quyết với sự phân tách triệt để cú pháp và ràng buộc logic.
-
-Một số vấn đề còn tồn đọng:
-- Chưa review code style của các triển khai mới.
-- lstaxer.nullremov chưa được triển khai vào pipeline chung của PLD/μE-LS.
-- Chưa bổ sung BST cho pipeline này lên hệ thống phần cứng thực tế.
-
-Đã giải quyết vấn đề 1 với việc sửa đổi trong template nhưng chưa hoàn toàn ưng ý, có thể cân nhắc sửa đổi lại thêm.
+Đã remove lstaxer.nullremov khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 -->
 
-<!-- NOTE - Expectation for pipeline
-Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đọng của PLD/μE-LS để bắt đầu rebase các task thuộc về phiên bản 1.2.0 sang các phiên bản 1.1.7, 1.1.8, 1.1.9 để hoàn thiện các submodule cơ sở hạ tầng được dự trù trong phiên bản 1.2.0, bao gồm các tính năng PLTF.TSD/TLC.
--->
-
-- [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
-- [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin đưa vào phiên bản 1.1.7 hoặc 1.1.8 để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
+- [x] Bổ sung khả năng kiểm tra theo syntax mới của PLD/μE-LS trên lstaxer.vlid.
+- [x] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin đưa vào phiên bản 1.1.7 hoặc 1.1.8 để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
 
 <!-- SECTION - Idea cho remote-file alias
 # NOTE - bên nhánh chore vừa bổ sung hiệu chỉnh về tên gọi nên kiểm tra xem breaking change có xảy ra hay không. Nếu có thì cần cân nhắc sửa đổi lại tên gọi để tránh xung đột với các triển khai hiện tại.
@@ -348,10 +376,135 @@ Khi chúng ta có 1 file A cần remote-alias từ file B:
 
 # STATUS - Tuy nhiên, ở thời điểm hiện tại chưa có kiểm tra lại tính khả thi này nên ustab.ankorpin sẽ chưa được triển khai trước khi có kết quả kiểm tra khả thi. Nếu kết quả kiểm tra khả thi thì sẽ bổ sung ustab.ankorpin vào sau phiên bản 1.1.6 khi pipeline được chuẩn hóa và hoàn thiện hơn.
 
+# STATUS - Đã hoàn thiện và kiểm tra trên testobj, có thể đưa vào pipeline. Cần cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8.
+
 # !SECTION
 -->
 
-- [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
+- [x] Hoàn thiện thiết kế lstaxer.ankorpin để hỗ trợ việc tự động gán anchor cho các tag trong YAML, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP. //STATUS - Đã hoàn thiện thiết kế và kiểm tra, có thể đưa vào pipeline.
+- [x] Revert lại các PAL để làm testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Sửa đổi thiết kế CMakeList.txt để hỗ trợ việc build các testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Remove postfix `arch` trong tên gọi của các testobj để giảm sự dư thừa và tăng tính nhất quán trong việc đặt tên các module trong dự án μEDP.
+- [x] Bổ sung và hoàn thiện PAL cho 2 uutobj STM32H723 và ESP32S3 với API hoàn thiện để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+
+<!-- STATUS
+Trong thiết kế trước đó:
+- pycdscriptor.jnerator được triển khai để sinh ra toàn bộ các cấu hình khai báo bắt buộc cho apps/lstaxizer.yaml
+- pycdscriptor.ustab được dùng để sinh ra bộ cấu hình tham chiếu cho logic. 
+- Các triển khai chưa được thêm vào chính là lstaxer.vlid (chứa pipeline từ lstaxer.strucjec đến lstaxer.symresolv) và sử dụng lstaxer.pydantic_model để mapping cấu hình sang parse-able state.
+
+Hiện tại: 
+- pycdscriptor.jnerator được phân tách thành 2 phần là jnerator.pregen và jnerator.postgen để phân biệt các cấu hình được sinh ra trước khi định nghĩa logic và sau khi định nghĩa logic. 
+- lstaxer.lukupmodel được bổ sung để triển khai đưa toàn bộ các cấu hình YAML thành parse-able state pydantic model. 
+- lstaxer.kre8 được hoàn thiện triển khai cùng với jnerator.pos_logicdef để phối hợp triển khai sinh ra các mã nguồn C hoàn chỉnh.
+- Vấn đề nhập nhằng trong data đã được giải quyết với sự phân tách triệt để cú pháp và ràng buộc logic.
+
+Một số vấn đề còn tồn đọng:
+- Chưa review code style của các triển khai mới.
+- lstaxer.nullremov chưa được triển khai vào pipeline chung của PLD/μE-LS.
+- Chưa bổ sung BST cho pipeline này lên hệ thống phần cứng thực tế.
+
+Đã giải quyết vấn đề 1 với việc sửa đổi trong template nhưng chưa hoàn toàn ưng ý, có thể cân nhắc sửa đổi lại thêm.
+
+Đã giải quyết vấn đề 2 với việc loại bỏ lstaxer.nullremov khỏi pipeline chung của PLD/μE-LS do lo ngại về phá vỡ cấu trúc và tăng phức tạp xử lý khi parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+
+Đã thực hiện triển khai trên vir-testobj Linux nhưng kết quả có nghi vấn, cần kiểm tra sâu với GDB.
+
+Chờ BST trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+-->
+
+<!-- NOTE - Expectation for pipeline
+Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đọng của PLD/μE-LS để bắt đầu rebase các task thuộc về phiên bản 1.2.0 sang các phiên bản 1.1.7, 1.1.8, 1.1.9 để hoàn thiện các submodule cơ sở hạ tầng được dự trù trong phiên bản 1.2.0, bao gồm các tính năng PLTF.TSD/TLC.
+-->
+
+- [x] Kiểm tra chi tiết kết quả BST của vir-testobj-v0 trên uutobj Linux với GDB để kiểm tra các khả năng lỗi có thể xảy ra.
+
+<!-- STATUS
+Theo kết quả chạy từ GDB và kiểm tra logic TSM/FSM của Core:
+
+- uedp_tsm_trans tác động lên on_exit và on_ntry
+- uedp_tsm_dispatch tác động lên on_actv
+
+Khi thực hiện chạy ở sequence đầu tiên thì được kết quả như sau 
+
+```c
+[USR][IDLE][NTRY]: System initialized. Ready to start sequence.
+[TASK_NORM_A][IDLE][NTRY]: Task initialized. Ready to receive messages.
+[USR][IDLE][ONST]: Posted SIG_USR_START to TASK_NORM_A.
+[USR][IDLE][EXIT]: Sequence completed. Transitioning to RUNNING state.
+[USR][RUNNING][NTRY]: Sequence started. Waiting for TASK_NORM_A to complete its operations.
+[TASK_NORM_A][IDLE][EXIT]: Exiting IDLE state. Transitioning to WAITING state.
+[TASK_NORM_A][WAITING][NTRY]: Posted SIG_0x12 to TASK_NORM_B.
+[TASK_NORM_B][IDLE][ONST]: Received SIG_0x12 in IDLE state.
+[TASK_NORM_B][IDLE][ONST]: Posted SIG_0x34 to TASK_NORM_A with GDA_SYSTEM_STATUS data.
+[TASK_NORM_B][IDLE][ONST]: Posted SIG_0xFF to TASK_NORM_A with GDA_SYSTEM_STATUS data.
+```
+
+Đây là chuỗi sequence gần đúng khi A đáng ra phải trả về 1 lần 0xAA cho B, tuy chúng lại lặp tận 2 lần. 
+Có thể nghi ngờ đến việc do logic thiếu trong logic-testobj của A và USR 
+dẫn đến việc A tự gọi chính fn_on_actv của mình 2 lần, dẫn đến việc B nhận 2 lần 0xAA.
+Theo đó dẫn đến việc USR tự gọi lại SIG_USR_START cho A lần kế tiếp, tiếp tục lại 
+kịch bản sequence trên.
+
+Do đó, có thể kết luận xảy ra chính là Logic-testobj của A và USR chưa hoàn thiện.
+Hệ quả dẫn đến lstaxer.kre8 và jnerator.postgen sinh ra code sai.
+Một nghi ngờ kéo theo chính là khả năng phải sửa đổi triển khai của cả 2
+lstaxer.kre8 và jnerator.postgen.
+-->
+
+- [x] Sửa đổi logic-testobj của A và USR với thiết kế syntax tối ưu hơn cho multiline để vượt qua rào cản của actv-obj gốc.
+- [x] Cân nhắc remove actv-obj-post trong toàn bộ thiết kế do sự thiếu xót trong review logic-testobj và thiết kế HSMC gốc.
+
+<!-- SECTION - actv-obj-post removal task
+Theo kết quả kiểm tra trước đó và các kết luận từ việc review logic-testobj và thiết kế HSMC gốc
+
+Ở thời điểm hiện tại sau khi sửa chữa toàn bộ logic-testobj của A và USR với thiết kế syntax tối ưu hơn cho multiline
+Kết quả chạy trên vir-testobj Linux đã cho ra kết quả đúng như mong đợi, không còn lặp lại 2 lần 0xAA nữa.
+
+Do đó, có thể kết luận rằng generator đã hoạt động đúng như dự kiến và không có lỗi trong lstaxer.kre8 và jnerator.postgen.
+
+Tuy nhiên, hiện tại việc chỉnh sửa logic-testobj đã lộ ra 1 vấn đề chính là sự thiếu xót về mặt hướng dẫn thiết kế với TSM và FSM,
+Điều này đã dẫn đến việc time-consuming trong việc kiểm tra và sửa chữa logic-testobj của A và USR.
+
+Kết luận 1 chính là cần bổ sung một lộ trình hướng dẫn thiết kế TSM và FSM để tránh các vấn đề tương tự trong tương lai ở cả mặt test lẫn product-in-use.
+
+Từ quá trình chỉnh sửa và chạy thì đã phát hiện bổ sung một concern khác,
+actv-obj-post thật sự không đủ hiệu quả trong việc triển khai logic-testobj của A và USR,
+chúng có thể tương thích tốt với API duy nhất là uedp_task_norm_post_msg nhưng lại
+không tương thích với các API khác, hoặc nếu các API có điều kiện ràng buộc trước khi chạy như if-else
+thì actv-obj-post sẽ không thể perform so với c_call hoặc c_stmt.
+
+Kết luận 2 chính là phải remove toàn bộ syntax actv-obj-post trong thiết kế syntax gốc và giữ c_call hoặc c_stmt cho người sử dụng.
+Điều này đảm bảo 2 lợi ích:
+
+1. Giảm thiểu các vấn đề tương thích với các API khác trong lõi μEDP, giúp người dùng tùy ý bổ sung các điều kiện ràng buộc hay các logic phức tạp tại một thời điểm
+2. Đảm bảo giảm tải độ phức tạp của syntax μE-LS và mã nguồn kconfigspec, pycdscriptor.
+
+// STATUS - Đã hoàn thành, chưa sửa đổi trên tài liệu thiết kế.
+
+Ngoài ra, một lưu ý thứ 3 cần đề cập:
+
+//NOTE - Nhớ bổ sung thiết kế từ giấy nháp vào markdown để làm tài liệu tổng hợp thiết kế của HSMC và quy trình hướng dẫn xây dựng logic-testobj trên test và product-in-use.
+
+// !SECTION
+-->
+
+- [x] Remove toàn bộ syntax actv-obj-post trong thiết kế syntax gốc và giữ c_call hoặc c_stmt cho người sử dụng để giảm thiểu các vấn đề tương thích với các API khác trong lõi μEDP.
+- [x] Sửa đổi tài liệu thiết kế syntax với các thay đổi mới và cập nhật trạng thái cho các task cũ.
+- [x] Merge nhánh feat vào nhánh docs kèm thay đổi về folder mới chứa các test-obj và đường dẫn trong tài liệu thiết kế syntax.
+- [X] Remove `test` khỏi gitignore để đưa các testobj vào quản lý trong git.
+- [x] Bổ sung README.md cho testobj folder để hướng dẫn naming convention và purposes.
+- [x] Bổ sung scripting để tự động append các testobj vào lstaxizer.yaml để tăng khả năng tự động hóa quy trình làm việc.
+- [x] Bổ sung tài liệu hướng dẫn thiết kế logic-testobj trên test và product-in-use để tránh các vấn đề hiểu sai logic thực thi trong tương lai ở cả mặt test lẫn product-in-use. //STATUS - đã hoàn thiện trên `uels-syntax.md` và liên kết với `arch-design.md`
+- [x] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //DEPRECATED
+
+<!-- STATUS
+Loại bỏ task bên trên do tính năng file inclusion là tính năng specific của PyYAML, ruamel.yaml và không phải là tính năng chuẩn của YAML. Do đó, việc triển khai remote-file alias sẽ không được hỗ trợ trong các phiên bản hiện tại của μE-LS mà thay thế bằng in-file appendable configuration - IFAC.
+-->
+
+- [x] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //DEPRECATED - Không cần rewrite do đã đủ generic introduction.
+- [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table - pycdscriptor.ustab) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này.
 - [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.

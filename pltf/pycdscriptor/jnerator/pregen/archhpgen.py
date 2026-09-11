@@ -17,5 +17,5 @@ def main(context):
     # print(output)
   # Create file
   output_dir = os.path.join(cur_trm_dir, "sources", "pal", "arch", context['arch_name'])
-  with open(output_dir + "/" + context['arch_name'] + "_arch.h", "w", encoding="utf-8") as f:
+  with open(output_dir + "/" + context['arch_name'] + ".h", "w", encoding="utf-8") as f:
     f.write(output)
