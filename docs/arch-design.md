@@ -142,6 +142,8 @@ Trong đó, Core được thiết kế với 4 loại pool sau:
 - `EXTAL`: Kích thước mặc định là 16 đơn vị, mỗi đơn vị có kích thước phụ thuộc vào `sizeof(void*) * 4u`, dùng để cấp phát các message từ bên ngoài core, cho phép cô lập tài nguyên để Core xử lý trước khi truyền vào hệ thống và các tác vụ được đăng ký để nhận các message này.
 - `ISR`: Kích thước mặc định là 16 đơn vị, mỗi đơn vị có kích thước phụ thuộc vào `sizeof(uedp_msg_isr_t)`, dùng để ISR truyền tín hiệu vào hệ thống trên FIFO, giúp cô lập tín hiệu từ ISR và đảm bảo an toàn khi truyền vào hệ thống.
 
+Ngoài 4 loại pool trên (đều cấp phát/giải phóng vùng nhớ gắn liền với vòng đời của message), Core còn cung cấp thêm **[GDP] Global Data Pool** (định danh nội bộ `GAXES`) - một cơ chế khác hẳn về bản chất, không cấp phát vùng nhớ mà chỉ đăng ký tra cứu tên ↔ con trỏ cho các biến toàn cục (static/global storage duration) đã tồn tại sẵn. GDP ra đời để phục vụ khối `glbda:` của PLD/μE-LS khi truyền `ptype: REF`/`ptype: VAL`, và được mô tả chi tiết trong [D2MP] bên dưới.
+
 ### [SII] Safe ISR Injection - Cơ chế an toàn để truyền tín hiệu từ ISR vào hệ thống
 
 Để đảm bảo an toàn khi truyền tín hiệu từ ISR vào hệ thống, μEDP bổ sung một FIFO nội bộ bên trong Core để lưu trữ các tín hiệu từ ISR. Khi có ngắt (ví dụ: UART, Timer), PAL sẽ đẩy tín hiệu vào FIFO này. Core sẽ "drain" (rút dữ liệu) từ FIFO này vào các Task Queue ở đầu mỗi chu kỳ Scheduler. Cơ chế này giúp loại bỏ hoàn toàn việc Core phải biết về ISR, đồng thời đảm bảo an toàn và hiệu quả khi truyền tín hiệu từ ISR vào hệ thống.
@@ -156,7 +158,15 @@ Dựa theo thiết kế bộ nhớ quản lý tin nhắn, nhằm đảm bảo vi
 
 Trong đó, nếu kích thước của dữ liệu nhỏ hơn kích thước đã khai báo của pool, Core cung cấp API là `uedp_msg_set_data_val` để truyền dữ liệu trực tiếp vào payload của message. Nếu kích thước của dữ liệu lớn hơn kích thước đã khai báo của pool, người dùng có thể sử dụng API `uedp_msg_set_data_ref` để truyền địa chỉ của dữ liệu vào payload của message.
 
-Do đó cần lưu ý rằng đối với việc truyền tham chiếu thì nên bổ sung 1 FIFO toàn cục để lưu trữ các tham chiếu này nhằm tránh việc truyền trực tiếp địa chỉ của biến cục bộ vào payload của message, điều này có thể dẫn đến lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi.
+Do đó cần lưu ý rằng đối với việc truyền tham chiếu tới **biến cục bộ** (local variable, thời gian sống giới hạn trong 1 lần gọi hàm), người dùng phải tự đảm bảo vùng nhớ đó còn hợp lệ tại thời điểm message được xử lý (thường là khai báo `static`), tránh lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi (dangling pointer).
+
+Riêng với trường hợp truyền tham chiếu tới **biến toàn cục thật sự** (static/global storage duration, phục vụ khối `glbda:` của PLD/μE-LS), Core cung cấp thêm cơ chế **[GDP] Global Data Pool** để quản lý việc này một cách tường minh, thay vì để người dùng tự quản lý con trỏ thô như trên. GDP là một bảng đăng ký tĩnh (`uedp_gdp_slot_t`, mặc định `UEDP_GDP_MAX_SLOTS = 16` slot) ánh xạ tên ↔ con trỏ, với 5 API: `uedp_gdp_init()` (khởi tạo bảng), `uedp_gdp_register()`/`uedp_gdp_unregister()` (đăng ký/huỷ đăng ký 1 biến toàn cục theo tên), `uedp_gdp_get_ref()` (lấy con trỏ tham chiếu trực tiếp, dùng cho `ptype: REF`), và `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (sao chép giá trị ra/vào buffer, dùng cho `ptype: VAL`).
+
+Điểm khác biệt cốt lõi so với 4 pool `BLANK`/`ALLOC`/`EXTAL`/`ISR`: GDP **không cấp phát** vùng nhớ `data` (chỉ lưu con trỏ trỏ tới vùng nhớ đã tồn tại sẵn, do người dùng hoặc PLTF khai báo) và **không có khái niệm giải phóng/vòng đời** - biến toàn cục sống suốt vòng đời chương trình nên không có thao tác "free" một slot đã đăng ký. Điều này khác hẳn `ALLOC`, vốn gắn chặt với vòng đời `uedp_msg_alloc()`/`uedp_msg_free()` và không phù hợp để tái sử dụng cho mục đích lưu trữ biến toàn cục (sẽ phải tự chế thêm cơ chế "never-free" đè lên trên).
+
+`uedp_gdp_get_ref()` hiện **không** bọc `pal_enter_critical()`/`pal_exit_critical()`: do scheduler hiện tại là single-core, non-preemptive (mỗi vòng lập lịch chỉ dispatch đúng 1 task) và ISR không được phép gọi `actv`/`act`, nên không tồn tại đường tranh chấp thật sự ở bản hiện tại. Cần xem xét lại việc bọc critical section nếu μEDP phát triển tới môi trường đa nhân (AMP/SMP/HELF) trong tương lai. Toàn bộ quá trình cân nhắc và các phương án đã loại bỏ (ví dụ tái dùng `ALLOC`, hoặc bổ sung 1 FIFO tham chiếu toàn cục riêng) được ghi lại chi tiết tại `docs/review/dmp-gda.md`.
+
+Việc sinh vùng nhớ tĩnh thật cho khối `glbda:` (gọi `uedp_gdp_register()`) là trách nhiệm của một generator PLTF riêng (dự kiến `gda_tsgen.py`, thuộc phạm vi PLD/μE-LS) - core chỉ cung cấp API quản lý, không tự sinh code khai báo biến.
 
 Khi thực hiện lấy dữ liệu từ truyền tham chiếu thì người dùng có thể tham khảo cách khai báo trong `test02` như sau:
 
@@ -193,13 +203,42 @@ TSM tách biệt hoàn toàn giữa Dữ liệu cấu hình (nằm trong Flash) 
 
 ##### Cơ chế hoạt động
 
-- Tự động hóa Entry/Exit: Khi thực hiện `tsm_trans`, Core tự động gọi hàm thoát của trạng thái cũ và hàm vào của trạng thái mới. Điều này đảm bảo tài nguyên (như Timer) luôn được dọn dẹp sạch sẽ.
-- Cơ chế "Stay" & "Back":
-  - STAY: Thực thi logic nhưng không đổi trạng thái (tránh lặp lại Entry/Exit vô ích).
-  - BACK: Tự động quay lại trạng thái trước đó nhờ biến prev_state, giải quyết bài toán "State Explosion".
-- Tra cứu O(1): Sử dụng 16-bit ID giúp tốc độ chuyển trạng thái đạt mức tối đa của phần cứng.
+TSM hoạt động quanh 3 API chính bao gồm:
 
-Có thể tham khảo thiết kế chương trình mẫu trong `test01` để thấy rõ cách sử dụng TSM trong μEDP, nơi TSM được sử dụng để quản lý các chế độ vận hành của Task một cách hiệu quả và linh hoạt.
+- `tsm_init()`: Khởi tạo TSM với trạng thái mặc định, tác động đến one-time on_entry (`ot_on_ntry`).
+- `tsm_dispatch()`: Thực hiện phân phối tin nhắn và thực thi tác vụ, tác động đến `on_active`.
+- `tsm_trans()`: Thực hiện chuyển trạng thái, tác động đến in-loop on_entry (`il_on_ntry`) và `on_exit`.
+
+Khi bắt đầu, `tsm_init()` được gọi để thiết lập trạng thái mặc định và thực hiện one-time on_entry (`ot_on_ntry`) của trạng thái đó.
+
+Để TSM hoạt động thì `tsm_dispatch()` phải được gọi trong handler của task để task scheduler (tskeduler) phân phối tín hiệu đến TSM. Khi nhận được tín hiệu, TSM sẽ thực thi hàm `fn_on_active` của trạng thái hiện tại. Sau khi hoàn thành, TSM sẽ thực thi `fn_on_exit` của trạng thái hiện tại và chuyển sang trạng thái mới thông qua `fn_on_entry` của trạng thái mới.
+
+Ở lớp hoạt động cao hơn, TSM có logic ràng buộc với scheduler của cõi. Nghĩa là, khi sử dụng TSM, phải suy nghĩ đến mức độ ưu tiên giữa các task và logic chuyển trạng thái. TSM không tự động quản lý ưu tiên giữa các task, mà chỉ quản lý trạng thái của một task cụ thể.
+
+Do đó, khi thiết kế hệ thống, cần đảm bảo rằng các task có mức độ ưu tiên phù hợp để tránh tình trạng loop hoặc sai logic.
+
+```asciidoc
+                    #all                   ║
+                    ┌──────────┐ [in]      ║ > tsm_init
+                    │  ot_ntry │           ║
+                    └────┼─────┘           ║
+          -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
+                  #cur ┌─┴──┐[out][on]     ║
+                ┌──────┼actv┼──────┐       ║ > tsm_dispatch
+                │      └────┘      │       ║
+          -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
+                │                  │  #nxt ║
+              ┌─┼──┐           ┌───┼───┐   ║
+         #cur │exit┼───────────┼il_ntry│   ║ > tsm_trans
+              └────┘           └───────┘   ║
+                [on]                 [in]  ║
+                                           ║
+```
+
+<!-- DEPRECATED - Old TASK
+Bổ sung mẹo sử dụng HSMC trong syntax của PLD/μE-LS.
+#STATUS - DONE
+-->
 
 #### FSM - Finite State Machine
 
@@ -216,47 +255,15 @@ FSM được thiết kế theo mô hình Pointer-Swapping (Tráo đổi con tr�
 - Dispatch trực tiếp: Scheduler gọi fsm_dispatch, Core sẽ thực thi ngay hàm mà con trỏ đang trỏ tới.
 - Phù hợp với Logic tạm thời: Dùng cho các chuỗi hành động ngắn hạn như giải mã giao thức (UART parsing) hoặc Menu giao diện.
 
-Có thể tham khảo thiết kế chương trình mẫu trong `test03` để thấy rõ cách sử dụng FSM trong μEDP, nơi FSM được sử dụng để quản lý logic giải mã giao thức UART một cách linh hoạt và hiệu quả.
+##### Cơ chế làm việc
 
-Trong `test03` FSM được thiết kế với mỗi hàm là state_handler là 1 trạng thái. Mỗi trạng thái đều có 3 tín hiệu là `UEDP_FSM_SIG_INIT`, `UEDP_FSM_SIG_ENTRY`, `UEDP_FSM_SIG_EXIT` để quản lý vòng đời của trạng thái, sau đó mới đến các tín hiệu nghiệp vụ khác. Khi có sự kiện chuyển trạng thái thì sẽ thực hiện theo thứ tự là `EXIT` -> `ENTRY` để đảm bảo rằng tài nguyên được dọn dẹp sạch sẽ trước khi vào trạng thái mới.
+FSM hoạt động với các API chính bao gồm:
 
-Lưu ý rằng trong thiết kế của `test03`, FSM của các tác vụ luôn được khởi tạo vào `state_idle`, chỉ có các `state_idle` mới chứa tín hiệu `UEDP_FSM_SIG_INIT` để thực hiện các thao tác khởi tạo FSM, sau đó phụ thuộc vào tín hiệu bắt đầu từ người dùng mà sẽ chuyển sang `state_active` để thực hiện các chức năng chính của bài test. Điều này giúp đảm bảo rằng FSM luôn được khởi tạo đúng cách và có thể hoạt động một cách hiệu quả ngay khi nhận được tín hiệu bắt đầu từ người dùng.
+- `fsm_init()`: Khởi tạo FSM với trạng thái mặc định.
+- `fsm_dispatch()`: Thực hiện phân phối tin nhắn và gọi hàm trạng thái hiện tại.
+- `fsm_go_next()/fsm_go_back()`: Thực hiện chuyển trạng thái bằng cách tráo đổi con trỏ hàm.
 
-Ngoài ra thì đối với trường hợp looping của một trạng thái thì có thể xử lý thông qua việc calling isolation - bỏ mặc trạng thái không gọi tới. Ví dụ trong `test03`:
-
-```c
-void usr_state_active(uedp_msg_t* msg) {
-  switch (msg->sig) {
-    case UEDP_FSM_SIG_EXIT:
-      printf("[USR] Exiting ACTIVE state...\n");
-      break;
-    case UEDP_FSM_SIG_ENTRY:
-      printf("[USR] Entering ACTIVE state. System is now active.\n");
-      // Thực hiện gửi SIG_USR_START tới task A để kích hoạt chuỗi hành động
-      uedp_msg_t* msg_to_a = uedp_msg_alloc(TASK_NORM_A_ID, SIG_USR_START, 0);
-      uedp_task_norm_post_msg(TASK_NORM_A_ID, msg_to_a);
-      printf("[USR] Sent START signal to Task A. Waiting for further signals...\n");
-      break;
-    case SIG_USR_STOP:
-      printf("[USR] Received STOP signal. Transitioning to IDLE state...\n");
-      uedp_fsm_go_next(&fsm_usr, usr_state_idle); 
-      /**
-       * @brief Có thể dùng uedp_fsm_go_back(&fsm_usr) để quay lại trạng thái trước đó, 
-       *        nhưng ở context này thì go_next sẽ trực quan hơn 
-       *        để thể hiện rõ ràng việc chuyển đổi trạng thái từ ACTIVE về IDLE 
-       *        khi nhận được tín hiệu STOP.
-       */
-      break;
-    default:
-      printf("[USR] Encountered unexpected signal in ACTIVE state: %x\n", msg->sig);
-      break;
-  }
-}
-```
-
-Khi ở `state_active` và truyền tín hiệu qua tác vụ A thì FSM của TASK_USR trở thành loop vì không gọi tới. Điều này cho phép FSM của TASK_USR vẫn duy trì trạng thái `state_active` và có thể tiếp tục nhận và xử lý các tín hiệu khác mà không bị gián đoạn bởi việc chuyển trạng thái, đồng thời đảm bảo rằng tài nguyên được quản lý một cách hiệu quả trong suốt quá trình hoạt động của trạng thái này.
-
-Một lưu ý khác cần để tâm trong `test03` khi tác vụ A nhận `SIG_TSK_B_TO_A` thì sẽ gọi `uedp_fsm_go_next(&fsm_a, task_a_state_idle)` để chuyển trạng thái của tác vụ A về `state_idle`. Ở đây người dùng hoàn toàn có thể sử dụng `uedp_fsm_go_back(&fsm_a)` để quay lại trạng thái trước đó. Tuy nhiên trong context này thì `go_next` sẽ trực quan hơn để thể hiện rõ ràng việc chuyển đổi trạng thái từ `state_active` về `state_idle` khi nhận được tín hiệu `SIG_TSK_B_TO_A`, điều này giúp cho code dễ đọc và dễ hiểu hơn, đồng thời vẫn đảm bảo rằng FSM của tác vụ A được quản lý một cách hiệu quả và có thể hoạt động một cách linh hoạt trong suốt quá trình xử lý tín hiệu.
+Các trạng thái (st8) được xem như các "hàm" và được gọi trực tiếp thông qua con trỏ hàm. Khi một tín hiệu đến, FSM sẽ gọi hàm trạng thái hiện tại, và nếu cần chuyển sang trạng thái khác, nó sẽ thay đổi con trỏ hàm để trỏ tới hàm trạng thái mới. Sau khi hoàn thành, các st8 được tùy chọn trạng thái kế tiếp hoặc quay lại trạng thái trước đó thông qua `fsm_go_next()` hoặc `fsm_go_back()`.
 
 #### Phối hợp giữa TSM và FSM
 
@@ -524,7 +531,82 @@ Thiết kế này đủ để phục vụ các dịch vụ hậu trường nhẹ
 
 Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo thời gian, kèm theo cơ chế expected execution time, quantum và error callback.
 
-### [SIF] Safe Input Filter - Bộ lọc đầu vào an toàn = old [SOCI]
+### [FCR] Fatal Code Return - Định danh và xử lý lỗi nghiêm trọng
+
+Trước khi có FCR, các lỗi nghiêm trọng bên trong Core (pool hết chỗ, con trỏ không hợp lệ, ID tác vụ sai, transition không tồn tại...) được xử lý **im lặng và không nhất quán** giữa các module: có nơi `return NULL`, có nơi `return STAT_ERROR`, có nơi chỉ để lại comment `// có thể ghi log lỗi ở đây` mà không thực sự làm gì. Hệ quả là khi một lỗi nghiêm trọng xảy ra trên thiết bị thật, không có dấu vết nào được ghi lại và không có hành động xử lý nhất quán nào được thực thi.
+
+FCR (Fatal Code Return) giải quyết vấn đề này bằng một **bảng mã lỗi tập trung**: mỗi lỗi nghiêm trọng trong Core được gán một mã cố định, tra ra mức độ nghiêm trọng và hành động xử lý tương ứng, rồi luôn được ghi log qua `itnlog` trước khi thực thi hành động đó.
+
+#### Thiết kế mã lỗi
+
+Mã lỗi FCR (`uedp_fcr_code_t`, kiểu `ui16`) dùng chung nguyên lý encoding với `[HES]`: byte cao là mã **MODULE** phát sinh lỗi, byte thấp là mã **SUB-CODE** cụ thể trong module đó, ghép bằng macro `UEDP_FCR_CODE(mod, sub)`. Dải `0x9x` được chọn cho FCR vì các dải `0xAx` → `0xFx` đã bị chiếm bởi `TASK_NORM`/`TASK_POLL`/`TASK_PRI`/`FSM_SIG`/`TSM_SIG`/`TSM_STATE` (xem `[HES]`).
+
+| Module | Mã | Ý nghĩa |
+| --- | --- | --- |
+| `UEDP_FCR_MOD_MSG` | `0x90` | Quản lý tin nhắn (`uedp_msg`) |
+| `UEDP_FCR_MOD_TASK` | `0x91` | Quản lý tác vụ (`uedp_task`) |
+| `UEDP_FCR_MOD_TIMER` | `0x92` | Quản lý timer (`uedp_timer`) |
+| `UEDP_FCR_MOD_SM` | `0x93` | Máy trạng thái (`uedp_fsm`/`uedp_tsm`) |
+| `UEDP_FCR_MOD_ITNLOG` | `0x94` | Logger nội bộ (`uedp_itnlog`) |
+| `UEDP_FCR_MOD_OCE` | `0x95` | Out-Context Execution (`uedp_ocesvc`) |
+| `UEDP_FCR_MOD_PAL` | `0x96` | PAL / dịch vụ phần cứng (logdp, rprintf, memrp, arch...) |
+| `0x97` → `0x9D` | *(chưa dùng)* | Để trống cho module core sinh sau này |
+| `UEDP_FCR_MOD_APP` | `0x9E` | Dành cho tầng ứng dụng tự khai báo mã lỗi riêng |
+| `UEDP_FCR_MOD_UNK` | `0x9F` | Fallback khi tra bảng không tìm thấy mã lỗi |
+
+Mỗi mã lỗi được gắn với một `uedp_fcr_entry_t` gồm mô tả ngắn (`desc`), mức độ nghiêm trọng (`severity`: `WARN`/`ERROR`/`FATAL`), và hành động xử lý (`action`):
+
+- `UEDP_FCR_ACT_LOG_ONLY`: chỉ ghi log, không can thiệp luồng chạy.
+- `UEDP_FCR_ACT_RESET_TASK`: đánh dấu để tầng trên tự khôi phục tác vụ liên quan (FCR không tự ý reset TSM/FSM của tác vụ khác).
+- `UEDP_FCR_ACT_SYS_RESET`: gọi `pal_sys_reset()` khởi động lại toàn hệ thống.
+- `UEDP_FCR_ACT_SYS_PANIC`: gọi `pal_sys_fatal()` dừng hệ thống ngay lập tức.
+
+#### Luồng raise
+
+```c
+void uedp_fcr_raise(uedp_fcr_code_t code, const char* file, ui32 line, const char* extra_msg) {
+  const uedp_fcr_entry_t* entry = uedp_fcr_lookup(code);
+
+  // 1. Luôn ghi log trước, kể cả khi hành động tiếp theo là SYS_PANIC/SYS_RESET
+  uedp_itnlog_log(pal_sys_get_tick(), internal_uedp_fcr_sev_to_level(entry->severity),
+                  ITNLOG_TAG_FCR, (extra_msg != NULL) ? extra_msg : entry->desc);
+
+  // 2. Thực thi hành động tương ứng
+  switch (entry->action) { /* LOG_ONLY / RESET_TASK / SYS_RESET / SYS_PANIC */ }
+}
+```
+
+Hai macro `UEDP_FCR_RAISE(code)` và `UEDP_FCR_RAISE_MSG(code, extra)` tự động điền `__FILE__`/`__LINE__`, trong đó `RAISE_MSG` cho phép truyền thêm mô tả ngữ cảnh cụ thể (ví dụ tên hàm, giá trị tham số sai) thay cho `desc` mặc định trong bảng.
+
+`uedp_fcr_lookup()` duyệt tuyến tính bảng `g_fcr_table[]`; nếu không tìm thấy mã lỗi sẽ trả về entry `UEDP_FCR_UNKNOWN` (mặc định `SEV_FATAL` + `ACT_SYS_PANIC`) — cố ý chọn hành động nghiêm trọng nhất cho trường hợp "không rõ lỗi gì" để tránh bỏ sót.
+
+#### Tích hợp với itnlog
+
+FCR không tự ghi log trực tiếp mà đi qua `uedp_itnlog_log()` với tag riêng `ITNLOG_TAG_FCR`, ánh xạ `severity` sang mức log tương ứng (`WARN`/`ERROR` → `ITNLOG_LEVEL_WARN`/`ERROR`, `FATAL` → `ITNLOG_LEVEL_FATAL`). Việc này tận dụng lại toàn bộ cơ chế `[PPLP]` đã có (ring buffer, filter theo tag/level, dispatch ra nhiều backend qua `logdp`) thay vì xây một đường log riêng cho lỗi nghiêm trọng.
+
+#### Các điểm đã tích hợp FCR vào Core
+
+FCR chỉ có giá trị khi được "khâu" vào đúng những chỗ lỗi thật sự im lặng trước đó, thay vì chỉ tồn tại như một module đứng riêng. Tính đến bản này, FCR đã được raise tại hơn 40 điểm trên 7 file lõi:
+
+| File | Một số mã lỗi tiêu biểu |
+| --- | --- |
+| `uedp_msg.c` | `MSG_POOL_EXHAUSTED`, `MSG_INVALID_PTR`, `MSG_ISR_FIFO_FULL`, `MSG_POOL_MISCONFIG` |
+| `uedp_task.c` | `TASK_INVALID_ID`, `TASK_QUEUE_FULL`, `TASK_INVALID_PRI`, `TASK_PRI_EXHAUSTED` |
+| `uedp_timer.c` | `TIMER_POOL_EXHAUSTED`, `TIMER_INVALID_PARAM`, `TIMER_CORRUPTED` |
+| `uedp_tsm.c` | `SM_INVALID_TRANS`, `SM_NULL_HANDLER` |
+| `uedp_fsm.c` / `uedp_fsm.h` | `SM_NULL_HANDLER` (cả ở `go_next`/`go_back` lẫn `uedp_fsm_dispatch()`) |
+| `uedp_ocesvc.c` | `OCE_REGISTRY_FULL`, `OCE_INVALID_SVC`, `OCE_APPEND_FAILED`, `OCE_NOT_INIT` |
+| `pal_logdp.c` | `PAL_LOGDP_TABLE_FULL` (thay hẳn lệnh gọi `pal_sys_fatal()` trực tiếp cũ) |
+
+Nguyên tắc chọn nơi raise: **chỉ raise ở những nhánh thật sự bất thường**, không raise ở những nhánh hợp lệ xảy ra thường xuyên trong vận hành bình thường — ví dụ `TSM_STATE_STAY` (ở lại state hiện tại), `g_task_norm_ready == 0` (scheduler rảnh, xảy ra mỗi vòng lặp khi idle), hay `uedp_timer_remove()` gọi trên một timer chưa từng được set. Raise tràn lan vào các nhánh bình thường sẽ biến FCR thành nguồn nhiễu log thay vì tín hiệu cảnh báo có giá trị.
+
+> **Bài học trong quá trình tích hợp**: khi bắt đầu raise FCR từ nhiều điểm hơn trong Core, một lỗi tiềm ẩn có sẵn trong `uedp_itnlog_log()` đã bị lộ ra: hàm này dereference `uedp_task_norm_get_current_msg()->sig` mà không kiểm tra NULL. Trước đây không ai gọi `itnlog_log()` từ ngoài ngữ cảnh một task đang dispatch nên lỗi này không bao giờ xảy ra; nhưng FCR lại raise được từ nhiều nơi, kể cả từ `main()` lúc setup (trước khi task nào chạy) — khiến `g_current_msg` vẫn là `NULL` và gây crash ngay lần raise đầu tiên. Đã sửa bằng một dòng kiểm tra NULL phòng thủ trong `itnlog_log()`. Đây là minh chứng cụ thể cho lý do FCR cần được viết và test cẩn thận: bản thân việc thêm cơ chế báo lỗi cũng có thể vô tình mở ra đường crash mới nếu các module nó phụ thuộc (ở đây là `itnlog`) chưa đủ phòng thủ.
+
+#### Hạn chế / việc còn thiếu
+
+- `UEDP_FCR_ACT_RESET_TASK` ở bản 0.1 **chưa tự động khôi phục** tác vụ liên quan — mới dừng ở mức ghi log `ERROR`, việc reset TSM/FSM về trạng thái an toàn vẫn phải do tầng trên (task giám sát hoặc OCE) tự xử lý.
+- `UEDP_FCR_ITNLOG_BUF_CORRUPT` đã có mã trong bảng nhưng **chưa có logic kiểm tra hash thực sự** ở phía đọc (`uedp_itnlog_dump()`) — hiện `itnlog` chỉ tính hash lúc ghi, chưa so sánh lại lúc đọc để phát hiện corrupt.
+- Người dùng ở tầng ứng dụng có thể tự khai báo mã lỗi riêng qua `UEDP_FCR_CODE(UEDP_FCR_MOD_APP, x)`, nhưng hiện chưa có cơ chế cho phép tầng ứng dụng **tự đăng ký thêm entry** vào `g_fcr_table[]` lúc runtime — bảng hiện là `static const`, muốn thêm entry mới phải sửa trực tiếp `uedp_fcr.c`.
 
 ## Công cụ hỗ trợ phát triển (Development Tools)
 

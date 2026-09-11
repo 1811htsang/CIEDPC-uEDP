@@ -1,5 +1,5 @@
 /**
- * @file uedp_fcr.c
+  * @file uedp_fcr.c
  * @author Hai Minh
  * @brief Implementation of Fatal Code Return (FCR)
  * @version 0.1
@@ -36,6 +36,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   // [TIMER]
   { UEDP_FCR_TIMER_POOL_EXHAUSTED, "TIMER pool exhausted",            UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_TIMER_INVALID_PARAM,  "TIMER invalid param",             UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_TIMER_CORRUPTED,      "TIMER linked list corrupted",     UEDP_FCR_SEV_FATAL,  UEDP_FCR_ACT_SYS_PANIC  },
 
   // [SM] (FSM/TSM)
   { UEDP_FCR_SM_INVALID_TRANS,     "SM invalid transition",           UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
@@ -48,9 +49,15 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   { UEDP_FCR_OCE_REGISTRY_FULL,    "OCE registry full",               UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_OCE_INVALID_SVC,      "OCE invalid service ptr",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_OCE_APPEND_FAILED,    "OCE append failed",               UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_OCE_NOT_INIT,         "OCE scheduler called pre-init",   UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
 
   // [PAL]
   { UEDP_FCR_PAL_LOGDP_TABLE_FULL, "PAL logdp output table full",     UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
+
+  { UEDP_FCR_GDP_TABLE_FULL,       "GDP table full",                  UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_GDP_NOT_FOUND,        "GDP name not found",              UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_GDP_INVALID_PARAM,    "GDP invalid param",               UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_GDP_DUPLICATE_NAME,   "GDP duplicate name",              UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // Fallback - LUÔN đặt cuối cùng
   { UEDP_FCR_UNKNOWN,              "Unknown FCR code",                UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  }

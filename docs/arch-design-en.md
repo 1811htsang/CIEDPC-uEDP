@@ -142,6 +142,8 @@ The Core is designed with the following 4 pool types:
 - `EXTAL`: 16 units by default, each unit sized according to `sizeof(void*) * 4u`, used to allocate messages coming from outside the core, allowing resources to be isolated so the Core can process them before passing them into the system and to the tasks registered to receive these messages.
 - `ISR`: 16 units by default, each unit sized according to `sizeof(uedp_msg_isr_t)`, used for an ISR to pass signals into the system via a FIFO, helping to isolate signals coming from an ISR and ensure safety when passing them into the system.
 
+Beyond these 4 pool types (each allocating/freeing memory tied to a message's lifecycle), the Core also provides **[GDP] Global Data Pool** (internal codename `GAXES`) - a mechanism of a fundamentally different nature: it does not allocate memory at all, only registers a name-to-pointer lookup for global variables (static/global storage duration) that already exist. GDP exists to serve the `glbda:` block of PLD/μE-LS when passing `ptype: REF`/`ptype: VAL`, and is described in detail in [D2MP] below.
+
 ### [SII] Safe ISR Injection — A safe mechanism for passing signals from an ISR into the system
 
 To ensure safety when passing signals from an ISR into the system, μEDP adds an internal FIFO inside the Core to store signals coming from ISRs. When an interrupt occurs (e.g., UART, Timer), the PAL pushes the signal into this FIFO. The Core "drains" this FIFO into the Task Queues at the start of each Scheduler cycle. This mechanism completely removes the need for the Core to know anything about ISRs, while ensuring safety and efficiency when passing signals from an ISR into the system.
@@ -156,7 +158,15 @@ Building on the message memory management design, and to ensure that the full co
 
 Specifically, if the size of the data is smaller than the pool's declared size, the Core provides the `uedp_msg_set_data_val` API to pass data directly into the message's payload. If the size of the data is larger than the pool's declared size, the user can use the `uedp_msg_set_data_ref` API to pass the data's address into the message's payload.
 
-It should therefore be noted that for pass-by-reference, a global FIFO should be added to store these references, in order to avoid passing the address of a local variable directly into a message's payload — doing so could lead to memory access errors when the message is processed after the local variable has gone out of scope.
+It should therefore be noted that when passing a reference to a **local variable** (limited lifetime within a single function call), the user must ensure that memory remains valid at the time the message is processed (typically by declaring it `static`), to avoid a memory access error when the message is processed after the local variable has gone out of scope (dangling pointer).
+
+For the specific case of passing a reference to a **genuinely global variable** (static/global storage duration, serving the `glbda:` block of PLD/μE-LS), the Core additionally provides the **[GDP] Global Data Pool** mechanism to manage this explicitly, instead of leaving the user to manage a raw pointer as above. GDP is a static registration table (`uedp_gdp_slot_t`, `UEDP_GDP_MAX_SLOTS = 16` slots by default) mapping name to pointer, with 5 APIs: `uedp_gdp_init()` (initialize the table), `uedp_gdp_register()`/`uedp_gdp_unregister()` (register/unregister a global variable by name), `uedp_gdp_get_ref()` (get a direct reference pointer, used for `ptype: REF`), and `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (copy a value out of/into a buffer, used for `ptype: VAL`).
+
+The core difference from the `BLANK`/`ALLOC`/`EXTAL`/`ISR` pools: GDP does **not allocate** the `data` memory (it only stores a pointer to memory that already exists, declared by the user or by PLTF) and has **no concept of freeing/lifecycle** - a global variable lives for the entire program lifetime, so there is no "free" operation for a registered slot. This differs from `ALLOC`, which is tightly bound to the `uedp_msg_alloc()`/`uedp_msg_free()` lifecycle and is not suitable for reuse to store global variables (doing so would require bolting on an ad-hoc "never-free" mechanism).
+
+`uedp_gdp_get_ref()` currently does **not** wrap `pal_enter_critical()`/`pal_exit_critical()`: since the current scheduler is single-core, non-preemptive (each scheduling cycle dispatches exactly one task) and an ISR is not allowed to call `actv`/`act`, there is no real contention path in the current version. Wrapping a critical section should be reconsidered if μEDP later grows to a multi-core environment (AMP/SMP/HELF). The full design discussion, including rejected alternatives (e.g. reusing `ALLOC`, or adding a dedicated global reference FIFO), is recorded in detail in `docs/review/dmp-gda.md`.
+
+Generating the actual static memory for a `glbda:` block (calling `uedp_gdp_register()`) is the responsibility of a separate PLTF generator (planned as `gda_tsgen.py`, within the scope of PLD/μE-LS) - the core only provides the management API, it does not generate variable-declaration code itself.
 
 When retrieving data passed by reference, the user can refer to the declaration style used in `test02`, as follows:
 
@@ -524,7 +534,82 @@ This design is sufficient to serve lightweight background services and can gradu
 
 In μE-OS, this will be upgraded to AOCE (Advanced OCE) with an SCB (Service Control Block) to manage OCE services more flexibly and handle time-based prioritization, along with an expected-execution-time mechanism, quantum, and error callback.
 
-### [SIF] Safe Input Filter = old [SOCI]
+### [FCR] Fatal Code Return — Identifying and handling critical errors
+
+Before FCR existed, critical errors inside the Core (pool exhaustion, invalid pointers, wrong task IDs, non-existent transitions, etc.) were handled **silently and inconsistently** across modules: some places did `return NULL`, others did `return STAT_ERROR`, and others simply left a comment like `// could log the error here` without actually doing anything. As a result, when a critical error occurred on real hardware, no trace was recorded and no consistent handling action was taken.
+
+FCR (Fatal Code Return) solves this with a **centralized error-code table**: every critical error in the Core is assigned a fixed code, which is looked up to determine its severity and corresponding handling action, and is always logged through `itnlog` before that action is executed.
+
+#### Error-code design
+
+The FCR error code (`uedp_fcr_code_t`, of type `ui16`) uses the same encoding principle as `[HES]`: the high byte is the **MODULE** code where the error originated, and the low byte is the specific **SUB-CODE** within that module, combined using the `UEDP_FCR_CODE(mod, sub)` macro. The `0x9x` range was chosen for FCR because the `0xAx` → `0xFx` ranges are already taken by `TASK_NORM`/`TASK_POLL`/`TASK_PRI`/`FSM_SIG`/`TSM_SIG`/`TSM_STATE` (see `[HES]`).
+
+| Module | Code | Meaning |
+| --- | --- | --- |
+| `UEDP_FCR_MOD_MSG` | `0x90` | Message management (`uedp_msg`) |
+| `UEDP_FCR_MOD_TASK` | `0x91` | Task management (`uedp_task`) |
+| `UEDP_FCR_MOD_TIMER` | `0x92` | Timer management (`uedp_timer`) |
+| `UEDP_FCR_MOD_SM` | `0x93` | State machines (`uedp_fsm`/`uedp_tsm`) |
+| `UEDP_FCR_MOD_ITNLOG` | `0x94` | Internal logger (`uedp_itnlog`) |
+| `UEDP_FCR_MOD_OCE` | `0x95` | Out-Context Execution (`uedp_ocesvc`) |
+| `UEDP_FCR_MOD_PAL` | `0x96` | PAL / hardware services (logdp, rprintf, memrp, arch...) |
+| `0x97` → `0x9D` | *(unused)* | Reserved for core modules introduced later |
+| `UEDP_FCR_MOD_APP` | `0x9E` | Reserved for the application layer to declare its own error codes |
+| `UEDP_FCR_MOD_UNK` | `0x9F` | Fallback when a lookup fails to find the error code |
+
+Each error code is attached to a `uedp_fcr_entry_t` consisting of a short description (`desc`), a severity level (`severity`: `WARN`/`ERROR`/`FATAL`), and a handling action (`action`):
+
+- `UEDP_FCR_ACT_LOG_ONLY`: only logs the error, without interfering with the execution flow.
+- `UEDP_FCR_ACT_RESET_TASK`: flags the error so a higher layer can recover the affected task on its own (FCR does not itself reset another task's TSM/FSM).
+- `UEDP_FCR_ACT_SYS_RESET`: calls `pal_sys_reset()` to restart the entire system.
+- `UEDP_FCR_ACT_SYS_PANIC`: calls `pal_sys_fatal()` to halt the system immediately.
+
+#### Raise flow
+
+```c
+void uedp_fcr_raise(uedp_fcr_code_t code, const char* file, ui32 line, const char* extra_msg) {
+  const uedp_fcr_entry_t* entry = uedp_fcr_lookup(code);
+
+  // 1. Always log first, even when the following action is SYS_PANIC/SYS_RESET
+  uedp_itnlog_log(pal_sys_get_tick(), internal_uedp_fcr_sev_to_level(entry->severity),
+                  ITNLOG_TAG_FCR, (extra_msg != NULL) ? extra_msg : entry->desc);
+
+  // 2. Execute the corresponding action
+  switch (entry->action) { /* LOG_ONLY / RESET_TASK / SYS_RESET / SYS_PANIC */ }
+}
+```
+
+The two macros `UEDP_FCR_RAISE(code)` and `UEDP_FCR_RAISE_MSG(code, extra)` automatically fill in `__FILE__`/`__LINE__`, where `RAISE_MSG` allows passing an additional, more specific context description (e.g., a function name or an invalid parameter value) in place of the table's default `desc`.
+
+`uedp_fcr_lookup()` performs a linear scan of the `g_fcr_table[]` table; if the error code is not found, it returns the `UEDP_FCR_UNKNOWN` entry (default `SEV_FATAL` + `ACT_SYS_PANIC`) — the most severe action is deliberately chosen for the "unknown error" case to avoid missing anything.
+
+#### Integration with itnlog
+
+FCR does not log directly on its own; instead it goes through `uedp_itnlog_log()` with a dedicated `ITNLOG_TAG_FCR` tag, mapping `severity` to the corresponding log level (`WARN`/`ERROR` → `ITNLOG_LEVEL_WARN`/`ERROR`, `FATAL` → `ITNLOG_LEVEL_FATAL`). This reuses the entire existing `[PPLP]` mechanism (ring buffer, filtering by tag/level, dispatch to multiple backends via `logdp`) instead of building a separate logging path for critical errors.
+
+#### Points where FCR has been integrated into the Core
+
+FCR only has value once it is actually "stitched" into the places that were genuinely silent failures before, rather than existing as a standalone module on its own. As of this version, FCR has been raised at more than 40 points across 7 core files:
+
+| File | Some representative error codes |
+| --- | --- |
+| `uedp_msg.c` | `MSG_POOL_EXHAUSTED`, `MSG_INVALID_PTR`, `MSG_ISR_FIFO_FULL`, `MSG_POOL_MISCONFIG` |
+| `uedp_task.c` | `TASK_INVALID_ID`, `TASK_QUEUE_FULL`, `TASK_INVALID_PRI`, `TASK_PRI_EXHAUSTED` |
+| `uedp_timer.c` | `TIMER_POOL_EXHAUSTED`, `TIMER_INVALID_PARAM`, `TIMER_CORRUPTED` |
+| `uedp_tsm.c` | `SM_INVALID_TRANS`, `SM_NULL_HANDLER` |
+| `uedp_fsm.c` / `uedp_fsm.h` | `SM_NULL_HANDLER` (in both `go_next`/`go_back` and `uedp_fsm_dispatch()`) |
+| `uedp_ocesvc.c` | `OCE_REGISTRY_FULL`, `OCE_INVALID_SVC`, `OCE_APPEND_FAILED`, `OCE_NOT_INIT` |
+| `pal_logdp.c` | `PAL_LOGDP_TABLE_FULL` (fully replacing the old direct call to `pal_sys_fatal()`) |
+
+The principle for choosing where to raise: **only raise on branches that are genuinely abnormal**, not on valid branches that occur regularly during normal operation — for example `TSM_STATE_STAY` (staying in the current state), `g_task_norm_ready == 0` (the scheduler is idle, which happens on every loop when idle), or calling `uedp_timer_remove()` on a timer that was never set. Raising indiscriminately on normal branches would turn FCR into a source of log noise rather than a meaningful warning signal.
+
+> **A lesson learned during integration**: as FCR began to be raised from more points in the Core, a latent bug already present in `uedp_itnlog_log()` was exposed: this function dereferences `uedp_task_norm_get_current_msg()->sig` without a NULL check. Previously, no one called `itnlog_log()` from outside the context of a dispatching task, so this bug never occurred; but FCR can be raised from many places, including from `main()` during setup (before any task has run) — leaving `g_current_msg` still `NULL` and causing a crash on the very first raise. This was fixed with a single defensive NULL check in `itnlog_log()`. This is concrete evidence of why FCR needs to be written and tested carefully: adding an error-reporting mechanism can itself unintentionally open up a new crash path if the modules it depends on (here, `itnlog`) are not yet defensive enough.
+
+#### Limitations / remaining work
+
+- In version 0.1, `UEDP_FCR_ACT_RESET_TASK` **does not yet automatically recover** the affected task — it currently only goes as far as logging an `ERROR`; resetting the TSM/FSM to a safe state still has to be handled by a higher layer (a supervisor task or OCE) on its own.
+- `UEDP_FCR_ITNLOG_BUF_CORRUPT` already has a code in the table, but there is **no actual hash-checking logic yet** on the read side (`uedp_itnlog_dump()`) — currently `itnlog` only computes the hash on write and does not yet re-compare it on read to detect corruption.
+- Users at the application layer can declare their own error codes via `UEDP_FCR_CODE(UEDP_FCR_MOD_APP, x)`, but there is currently no mechanism allowing the application layer to **register additional entries** into `g_fcr_table[]` at runtime — the table is currently `static const`, so adding a new entry requires directly editing `uedp_fcr.c`.
 
 ## Development Tools
 

@@ -19,8 +19,14 @@ echo "[INFO] Running as uedp_user (UID: $USER_ID)"
 # Run the Python scripts as the new user
 echo "[ENTRY] call menuconfig"
 python uedp.py menuconfig
-echo "[ENTRY] call testspec.generator"
-python -m pltf.testspec.generators.tsgen
+echo "[ENTRY] call pycdscriptor.jnerator.pregen.fpregen"
+python -m pltf.pycdscriptor.jnerator.pregen.fpregen
+echo "[ENTRY] call pycdscriptor.ustab.custab"
+python -m pltf.pycdscriptor.ustab.custab
+echo "[ENTRY] call pycdscriptor.ustab.ankorpin"
+python -m pltf.pycdscriptor.ustab.ankorpin
+# Change ownership of all files in the /uedp-libs and /uedp-test directories to the new user
+chown -R $USER_ID:$GROUP_ID /uedp-libs/*
 echo -e "[DONE]"
 echo -e "You can:"
 echo -e "\t[cd /uedp-test] for PLTF development"

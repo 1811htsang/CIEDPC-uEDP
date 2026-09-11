@@ -93,7 +93,7 @@ sta uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header);
 sta void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg);
 sta uedp_msg_pool_header_t* internal_uedp_msg_find_best_pool(ui16 size);
 sta bool uedp_msg_is_valid_ptr(uedp_msg_t* msg);
-sta void internal_uedp_msg_pool_panic(ui8 pool_id);
+sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name);
 
 void uedp_msg_pool_init() {
 	// Khởi tạo BLANK Pool
@@ -135,12 +135,26 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 	pal_exit_critical();
 
 	if (msg != NULL) {
-		msg->src_task_id = uedp_task_norm_get_current_id();
+		/**
+		 * @attention g_active_task_norm_id (trả về từ uedp_task_norm_get_current_id()) chỉ được
+		 *            cập nhật/reset bên trong internal_uedp_task_norm_dispatch() - nếu hàm này được
+		 *            gọi từ ngữ cảnh KHÔNG có task nào đang thực sự dispatch (ví dụ: từ ISR qua
+		 *            uedp_msg_drain_isr_pool(), từ uedp_timer_tick(), hoặc từ main() lúc setup tín
+		 *            hiệu khởi động hệ thống), giá trị này chỉ là "rác" còn sót lại từ vòng dispatch
+		 *            trước đó (thường là UEDP_TASK_NORM_IDLE_ID) - KHÔNG phản ánh đúng nguồn gốc thật.
+		 *            Dùng uedp_task_norm_get_current_msg() (chỉ khác NULL khi thực sự đang trong 1
+		 *            lần dispatch) để phân biệt, và gán UEDP_TASK_NORM_SYS_ID cho trường hợp không có
+		 *            task nguồn cụ thể, tránh đánh lừa rằng tin nhắn đến từ task IDLE.
+		 */
+		msg->src_task_id = (uedp_task_norm_get_current_msg() != NULL)
+			? uedp_task_norm_get_current_id()
+			: UEDP_TASK_NORM_SYS_ID;
 		msg->des_task_id = des_task_id;
 		msg->sig = sig;
 		msg->ref_count = 1; // mặc định 1 tham chiếu khi tạo mới
 	} else {
-		//TODO - Add FCR injection here with remove API `internal_uedp_msg_pool_panic`
+		// Pool đã hết chỗ - internal_uedp_msg_pool_pop()/find_best_pool() đã UEDP_FCR_RAISE()
+		// (MSG_POOL_EXHAUSTED) ngay tại nơi phát sinh, không cần xử lý gì thêm ở đây.
 	}
 
 	return msg;
@@ -185,6 +199,32 @@ void uedp_msg_ref_dec(uedp_msg_t* msg) {
 	if (msg->ref_count == 0) {
 		uedp_msg_free(msg);
 	}
+}
+
+/**
+ * @brief Thiết lập ID của tác vụ nguồn gửi tin nhắn
+ * @param msg: Con trỏ đến tin nhắn cần thiết lập ID nguồn
+ * @param src_task_id: ID của tác vụ nguồn gửi tin nhắn
+ */
+void uedp_msg_set_src_task_id(uedp_msg_t* msg, task_id_t src_task_id) {
+	if (!msg) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "set_src_task_id: null msg");
+		return;
+	}
+	msg->src_task_id = src_task_id;
+}
+
+/**
+ * @brief Thiết lập ID của tác vụ đích nhận tin nhắn
+ * @param msg: Con trỏ đến tin nhắn cần thiết lập ID đích
+ * @param des_task_id: ID của tác vụ đích nhận tin nhắn
+ */
+void uedp_msg_set_des_task_id(uedp_msg_t* msg, task_id_t des_task_id) {
+	if (!msg) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "set_des_task_id: null msg");
+		return;
+	}
+	msg->des_task_id = des_task_id;
 }
 
 /**
@@ -358,7 +398,8 @@ void uedp_msg_drain_isr_pool(void) {
 		if (msg) {
 			uedp_task_norm_post_msg(msg->des_task_id, msg);
 		} else {
-			//TODO - Add FCR injection here with remove API `internal_uedp_msg_pool_panic`
+			// Cấp phát thất bại cho tin nhắn gốc từ ISR - uedp_msg_alloc() đã UEDP_FCR_RAISE()
+			// ngay bên trong rồi, không cần xử lý gì thêm ở đây.
 		}
 	}
 
@@ -384,19 +425,6 @@ bool uedp_msg_is_valid_ptr(uedp_msg_t* msg) {
 	}
 
 	return false; // Con trỏ tin nhắn không hợp lệ
-}
-
-/**
- * @brief Xử lý tình huống khẩn cấp khi Pool tin nhắn xảy ra vấn đề
- * @attention Giữ lại làm hook rỗng cho tương lai (ví dụ dọn dẹp riêng theo pool_id) -
- *            action SYS_PANIC/LOG cho các sự kiện pool đã được UEDP_FCR_RAISE() xử lý
- *            ngay tại nơi phát sinh (uedp_msg_alloc/pool_pop/drain_isr_pool), nên hàm
- *            này KHÔNG tự raise thêm để tránh double-raise.
- * //FIXME - Remove API này nếu không cần thiết, vì các sự kiện pool đã được UEDP_FCR_RAISE() 
- * 			 xử lý ngay tại nơi phát sinh (uedp_msg_alloc/pool_pop/drain_isr_pool)
- */
-void internal_uedp_msg_pool_panic(ui8 pool_id) {
-	(void)pool_id;
 }
 
 RETR_STAT internal_uedp_msg_enqueue_isr_sig(task_id_t tid, ui16 sig) {
@@ -464,4 +492,128 @@ void internal_uedp_msg_pool_get_info(uedp_msg_type_t pool_id, pal_memrp_info_t* 
 			UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "get_info: unknown pool_id");
 			break;
 	}
+}
+
+/* ============================================================================
+ * [GDP] Global Data Pool — implementation
+ * Xem block comment ở đầu section tương ứng trong uedp_msg.h để biết lý do
+ * thiết kế (dpool riêng, không dùng lại ALLOC, không quản lý vòng đời).
+ * Xem docs/review/dmp-gda.md để biết đầy đủ bối cảnh & 2 vòng review đã chốt.
+ * ============================================================================ */
+
+/**
+ * @brief Bảng slot tĩnh của GDP - kích thước cố định UEDP_GDP_MAX_SLOTS, không cấp phát động
+ */
+sta uedp_gdp_slot_t g_gdp_table[UEDP_GDP_MAX_SLOTS] = {0};
+
+void uedp_gdp_init(void) {
+	memset(g_gdp_table, 0, sizeof(g_gdp_table));
+}
+
+RETR_STAT uedp_gdp_register(const char* name, void* data_ptr, ui16 size) {
+	if (!name || !data_ptr || size == 0) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_INVALID_PARAM, "register: null name/data_ptr or size=0");
+		return STAT_ERROR;
+	}
+
+	if (internal_uedp_gdp_find(name) != NULL) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_DUPLICATE_NAME, "register: name already exists");
+		return STAT_ERROR;
+	}
+
+	for (ui16 i = 0; i < UEDP_GDP_MAX_SLOTS; i++) {
+		if (!g_gdp_table[i].in_use) {
+			g_gdp_table[i].name = name;
+			g_gdp_table[i].data = data_ptr;
+			g_gdp_table[i].size = size;
+			g_gdp_table[i].in_use = true;
+			return STAT_OK;
+		}
+	}
+
+	UEDP_FCR_RAISE(UEDP_FCR_GDP_TABLE_FULL); // Không còn slot trống trong UEDP_GDP_MAX_SLOTS
+	return STAT_ERROR;
+}
+
+RETR_STAT uedp_gdp_unregister(const char* name) {
+	uedp_gdp_slot_t* slot = internal_uedp_gdp_find(name);
+	if (!slot) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_NOT_FOUND, "unregister: name not found");
+		return STAT_ERROR;
+	}
+
+	// Chỉ gỡ liên kết tra cứu - KHÔNG đụng vào vùng nhớ data (GDP chưa bao giờ sở hữu nó)
+	slot->name = NULL;
+	slot->data = NULL;
+	slot->size = 0;
+	slot->in_use = false;
+	return STAT_OK;
+}
+
+void* uedp_gdp_get_ref(const char* name) {
+	uedp_gdp_slot_t* slot = internal_uedp_gdp_find(name);
+	if (!slot) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_NOT_FOUND, "get_ref: name not found");
+		return NULL;
+	}
+	return slot->data;
+}
+
+RETR_STAT uedp_gdp_get_val(const char* name, void* out_buf, ui16 buf_size) {
+	if (!out_buf) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_INVALID_PARAM, "get_val: null out_buf");
+		return STAT_ERROR;
+	}
+
+	uedp_gdp_slot_t* slot = internal_uedp_gdp_find(name);
+	if (!slot) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_NOT_FOUND, "get_val: name not found");
+		return STAT_ERROR;
+	}
+
+	if (buf_size < slot->size) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_INVALID_PARAM, "get_val: out_buf too small");
+		return STAT_ERROR;
+	}
+
+	memcpy(out_buf, slot->data, slot->size);
+	return STAT_OK;
+}
+
+RETR_STAT uedp_gdp_set_val(const char* name, const void* in_buf, ui16 buf_size) {
+	if (!in_buf) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_INVALID_PARAM, "set_val: null in_buf");
+		return STAT_ERROR;
+	}
+
+	uedp_gdp_slot_t* slot = internal_uedp_gdp_find(name);
+	if (!slot) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_NOT_FOUND, "set_val: name not found");
+		return STAT_ERROR;
+	}
+
+	if (buf_size != slot->size) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_INVALID_PARAM, "set_val: size mismatch with registered slot");
+		return STAT_ERROR;
+	}
+
+	memcpy(slot->data, in_buf, slot->size);
+	return STAT_OK;
+}
+
+/**
+ * @brief Hàm nội bộ để tìm 1 slot GDP theo tên
+ * @param name Tên định danh cần tìm
+ * @return uedp_gdp_slot_t* Con trỏ tới slot nếu tìm thấy, NULL nếu không tìm thấy hoặc name là NULL
+ */
+sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name) {
+	if (!name) return NULL;
+
+	for (ui16 i = 0; i < UEDP_GDP_MAX_SLOTS; i++) {
+		if (g_gdp_table[i].in_use && g_gdp_table[i].name != NULL && strcmp(g_gdp_table[i].name, name) == 0) {
+			return &g_gdp_table[i];
+		}
+	}
+
+	return NULL;
 }
