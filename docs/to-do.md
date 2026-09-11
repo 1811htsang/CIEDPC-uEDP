@@ -161,9 +161,9 @@ Tức là có 1 space trước dấu `//` và 1 space trước dấu `!SECTION`,
 
 //  SECTION - v1.1.6
 
-//NOTE - Phiên bản này được lựa chọn để triển khai các vấn đề còn tồn đọng từ phiên bản 1.1.5, các đề xuất dự trù để hoàn thiện tính năng cũ.
+//NOTE - Phiên bản này được lựa chọn để triển khai các vấn đề còn tồn đọng từ phiên bản 1.1.5 đồng thời thực hiện các tinh chỉnh về mặt kiến trúc thiết kế, API C-type hay tài liệu, các đề xuất dự trù để hoàn thiện tính năng cũ.
 
-//NOTE - Ở phiên bản này sẽ bắt đầu bổ sung việc phân nhánh phát triển tính năng theo từng phiên bản số hiệu hoặc tên gọi đặc biệt để tránh việc lẫn lộn các tính năng của từng phiên bản với nhau. Cân nhắc bổ sung việc phân tách nhánh `feat` theo từng người phát triển để tránh xung đột khi merge code vào nhánh chính `main`.
+//DEPRECATED - Ở phiên bản này sẽ bắt đầu bổ sung việc phân nhánh phát triển tính năng theo từng phiên bản số hiệu hoặc tên gọi đặc biệt để tránh việc lẫn lộn các tính năng của từng phiên bản với nhau. Cân nhắc bổ sung việc phân tách nhánh `feat` theo từng người phát triển để tránh xung đột khi merge code vào nhánh chính `main`.
 
 - [x] Bổ sung tài liệu mô tả thiết kế kiến trúc (ver eng) để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
 - [x] Triển khai tài liệu thiết kế các tính năng từ KwDI sang PLTF để hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn. //NOTE - Đã trình bày với phiên bản 1.0 và cung cấp các đề xuất mới để cập nhật cho phiên bản 1.2.0.
@@ -234,11 +234,50 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 3. Hỗ trợ việc triển khai testing với các phiên bản sau đó một cách dễ dàng và hiệu quả hơn, đồng thời đảm bảo hỗ trợ cho các nhân sự mới tham gia vào dự án có thể nhanh chóng nắm bắt và thực hiện các công việc liên quan.
 -->
 
-- [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
-- [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một sự kiện có thể phát tới nhiều task đã đăng ký.
+<!-- STATUS
+Theo lộ trình hiện tại đã hoàn tất các task liên quan đến PLD/μE-LS, đã có BST trên vir-testobj-v0 với uutobj Linux, còn thiếu việc bổ sung BST trên các phy-uutobj khác như STM32, ESP32, v.v. để đảm bảo rằng các tính năng được phát triển pre-1.2.0 đều được kiểm thử đầy đủ trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
 
-//REVIEW - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
-//NOTE - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
+Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST-v1.1.5 để bảo vệ các tính năng đã phát triển để chuẩn bị rebase sub-tasklist từ v1.2.0 lên v1.1.6. 
+-->
+
+- [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+- [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
+- [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
+
+<!-- SECTION - PSE
+
+#TASK - Minh nên bổ sung thêm 1 tài liệu review về ý tưởng cho PSE tại docs/review/pse.md để thống nhất các ý tưởng và đề xuất cải tiến cho Pub/Sub engine của μEDP.
+
+#DEPRECATED - Old TASK - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+
+#CRITICAL - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
+
+#NOTE - Idea cho PSE, có thể sửa đổi hoặc bổ sung thêm sau đó
+Hiện tại trong API C-type thì 1 msg sẽ có 2 trường liên quan đến địa chỉ của task là `src_task_id` và `des_task_id`, do đó có thể đề xuất hướng nâng cấp như sau:
+
+- Đưa `des_task_id` thành một danh sách các task ID để hỗ trợ việc gửi tin nhắn tới nhiều task đã đăng ký, với số lượng task ID có trong danh sách thì tương ứng ref_count sẽ phải có giá trị tương đương để quản lý việc giải phóng bộ nhớ của tin nhắn một cách chính xác và hiệu quả.
+
+Ngoài ra thì theo thiết kế gốc, tin nhắn được allocate từ một pool duy nhất, sau đó thì mới gửi đến sử dụng cho các task, nghĩa là chỉ cần 1 lần allocate duy nhất đã được đảm bảo để giữ tin nhắn tồn tại cho đến khi tất cả các task đã nhận được tin nhắn và giải phóng bộ nhớ của tin nhắn. 
+
+Do đó, mỗi khi 1 task gửi tin nhắn có số lượng ref_count > 1 thì trước hết chúng phải xử lý như sau:
+
+- Allocate 1 message
+- Khai báo số lượng task ID trong danh sách des_task_id và giá trị ref_count tương ứng
+- Fill-up task ID của những task cần gửi tin nhắn
+- Thực hiện gửi tham chiếu tin nhắn
+
+Ở đây, như đã đề cập thì do 1 tin nhắn được allocate từ 1 pool duy nhất, do đó khi gửi tin nhắn thì chỉ cần gửi tham chiếu của tin nhắn đến các task đã đăng ký, và mỗi task sẽ nhận được cùng 1 tham chiếu của tin nhắn. Khi task nhận được tin nhắn, nó sẽ giảm giá trị ref_count của tin nhắn đi 1 đơn vị. Khi ref_count giảm về 0, tức là tất cả các task đã nhận được tin nhắn và giải phóng bộ nhớ của tin nhắn.
+
+Việc sử dụng truyền tham chiếu tin nhắn thay vì copy tin nhắn sẽ giúp giảm thiểu việc sử dụng bộ nhớ và tăng hiệu suất của hệ thống, đồng thời đảm bảo rằng các task nhận được cùng 1 thông tin từ tin nhắn mà không cần phải tạo ra nhiều bản sao của tin nhắn.
+
+#REVIEW - Giới hạn hỗ trợ của PSE
+
+Ở thời điểm hiện tại, đề xuất PSE sẽ chỉ hỗ trợ việc gửi tin nhắn tới nhiều task đã đăng ký, nhưng không hỗ trợ việc gửi tin nhắn tới các task chưa đăng ký. Điều này có nghĩa là các task cần phải đăng ký trước khi nhận được tin nhắn từ Pub/Sub engine, nhằm đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
+
+Ngoài ra, các tính năng nâng cao như lọc tin nhắn theo topic, QoS (Quality of Service), v.v. sẽ được cân nhắc để triển khai trong các phiên bản sau của μEDP, nhằm đảm bảo rằng Pub/Sub engine có thể đáp ứng được các yêu cầu của các ứng dụng phức tạp hơn trong tương lai.
+
+//  !SECTION
+-->
 
 - [ ] Ra mắt phiên bản 1.1.6 của lõi μEDP với đầy đủ tính năng PLD/μE-LS, Pub/Sub engine và tài liệu hướng dẫn sử dụng.
 
@@ -346,7 +385,7 @@ Khi chúng ta có 1 file A cần remote-alias từ file B:
 - [x] Revert lại các PAL để làm testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [x] Sửa đổi thiết kế CMakeList.txt để hỗ trợ việc build các testobj cho việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [x] Remove postfix `arch` trong tên gọi của các testobj để giảm sự dư thừa và tăng tính nhất quán trong việc đặt tên các module trong dự án μEDP.
-- [x] Bổ sung và hoàn thiện PAL cho 2 testobj STM32H723 và ESP32S3 với API hoàn thiện để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Bổ sung và hoàn thiện PAL cho 2 uutobj STM32H723 và ESP32S3 với API hoàn thiện để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [x] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- STATUS
@@ -379,7 +418,7 @@ Chờ BST trên phần cứng thật để kiểm tra khả năng sinh code và 
 Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đọng của PLD/μE-LS để bắt đầu rebase các task thuộc về phiên bản 1.2.0 sang các phiên bản 1.1.7, 1.1.8, 1.1.9 để hoàn thiện các submodule cơ sở hạ tầng được dự trù trong phiên bản 1.2.0, bao gồm các tính năng PLTF.TSD/TLC.
 -->
 
-- [x] Kiểm tra chi tiết kết quả BST của vir-testobj Linux với GDB để kiểm tra các khả năng lỗi có thể xảy ra.
+- [x] Kiểm tra chi tiết kết quả BST của vir-testobj-v0 trên uutobj Linux với GDB để kiểm tra các khả năng lỗi có thể xảy ra.
 
 <!-- STATUS
 Theo kết quả chạy từ GDB và kiểm tra logic TSM/FSM của Core:
@@ -465,7 +504,7 @@ Loại bỏ task bên trên do tính năng file inclusion là tính năng specif
 -->
 
 - [x] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //DEPRECATED - Không cần rewrite do đã đủ generic introduction.
-- [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên phy-testobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table - pycdscriptor.ustab) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này.
 - [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.
