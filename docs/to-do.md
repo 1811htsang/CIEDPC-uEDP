@@ -219,8 +219,10 @@ Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiệ
 
 <!-- NOTE - Lưu ý cho task bên trên
 Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được comment theo format kết hợp cùng doxygen-type.
+Minh sẽ hỗ trợ Khánh và Đạt thực thi task này
 -->
 
+- [ ] Bổ sung tài liệu tìm hiểu về smoltcp để hiểu về kiến trúc, tính năng hỗ trợ, cách smoltcp triển khai logic xử lý mạng hướng sự kiện.
 - [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
@@ -520,6 +522,9 @@ Sang đã review tài liệu thiết kế và approved.
 - [x] Bổ sung khả năng tham số `--it` và `--n-it` để hỗ trợ khả năng trực tiếp sinh code từ .config không cần thông qua menuconfig.
 - [x] Import include configuration cho nền tảng STM32CubeIDE.
 - [x] Bổ sung template C-type API cho archobj STM32F103 (abbr F103) để hỗ trợ task BST.
+- [ ] Sửa đổi đường dẫn tại line số 17 của `dmp-gda.md` để trỏ đến đúng vị trí của `pltf.pycdscriptor.jnerators`.
+- [ ] Bổ sung status cho đề xuất số 1 để xác nhận các thay đổi đã triển khai.
+- [ ] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
 - [ ] Thực hiện bổ sung C-type API cho archobj STM32F103 (abbr F103), archobj STM32H723 (abbr H723) và archobj ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD. //NOTE - Do trước đó việc bổ sung đã quên mất kiểm tra nội dung nên cần phải raise lại
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
@@ -527,7 +532,7 @@ Sang đã review tài liệu thiết kế và approved.
 Đưa 3 task bên trên sang phiên bản 1.2.1 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 -->
 
-- [ ] Thêm tài liệu thiết kế đưa smoltcp vào μEDP để bổ sung khả năng xử lý mạng tương thích hướng sự kiện, giúp mở rộng khả năng của lõi μEDP trong việc xử lý các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống.
+- [ ] Thêm tài liệu thiết kế đưa smoltcp vào μEDP để bổ sung khả năng sử dụng cho các ứng dụng mạng.
 - [ ] Thêm tài liệu thiết kế chi tiết bootloader - μDB (Device Bootloader) để hỗ trợ việc khởi động và quản lý các thiết bị trong hệ thống một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các thiết bị được khởi động và quản lý một cách an toàn và hiệu quả.
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
 - [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực.
