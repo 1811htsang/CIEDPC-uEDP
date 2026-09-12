@@ -106,6 +106,10 @@ graph LR
     └── test04/                  # Test với tính năng itnlog
 ```
 
+<!-- TASK - Lưu ý cho task bên trên
+Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được comment theo format kết hợp cùng doxygen-type.
+-->
+
 ---
 
 ## 📝 Documentation
