@@ -9,9 +9,7 @@
 #ifndef __UEDP_FCR_H__
   #define __UEDP_FCR_H__
 
-  /**
-   * @brief Khai báo thư viện sử dụng
-   */
+  // ANCHOR - Khai báo thư viện sử dụng
   #include "uedp_core.h"
 
   /**
@@ -55,13 +53,13 @@
    *            và tự đăng ký entry tương ứng nếu cần (xem uedp_fcr_raise()).
    */
 
-  // [MSG] - 0x90xx
+  // NOTE - [MSG] - 0x90xx
   #define UEDP_FCR_MSG_POOL_EXHAUSTED     UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x00) // Pool tin nhắn (BLANK/ALLOC/EXTAL/ISR) đã hết chỗ trống
   #define UEDP_FCR_MSG_INVALID_PTR        UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x01) // Thao tác trên con trỏ tin nhắn không hợp lệ (không thuộc Pool nào)
   #define UEDP_FCR_MSG_ISR_FIFO_FULL      UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x02) // Hàng đợi FIFO nhận tín hiệu ISR đã đầy
   #define UEDP_FCR_MSG_POOL_MISCONFIG     UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x03) // Tham số cấu hình Pool tin nhắn không hợp lệ lúc init (data_size/data_max/pool NULL)
 
-  // [TASK] - 0x91xx
+  // NOTE - [TASK] - 0x91xx
   #define UEDP_FCR_TASK_QUEUE_FULL        UEDP_FCR_CODE(UEDP_FCR_MOD_TASK, 0x00) // Hàng đợi tin nhắn nội bộ của 1 tác vụ đã đầy
   #define UEDP_FCR_TASK_INVALID_ID        UEDP_FCR_CODE(UEDP_FCR_MOD_TASK, 0x01) // ID tác vụ không tồn tại trong bảng tác vụ
   #define UEDP_FCR_TASK_PRI_EXHAUSTED     UEDP_FCR_CODE(UEDP_FCR_MOD_TASK, 0x02) // Hết mức ưu tiên tạm thời khi thực hiện Priority Escalation ([APE])
