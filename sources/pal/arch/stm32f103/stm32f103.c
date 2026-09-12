@@ -71,7 +71,7 @@ void uedp_core_init(void) {
  */
 
 void pal_core_init(void) {
-  pal_stm32_h723_init_env();
+  pal_stm32_f103_init_env();
 }
 
 void pal_enter_critical(void) {
@@ -102,28 +102,28 @@ void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
  * @brief Implementation cho stm32_arch.h
  */
 
-void pal_stm32_h723_init_env(void) {
+void pal_stm32_f103_init_env(void) {
   /**
    * @brief Việc bổ sung các triển khai
    *        tùy thuộc vào nhu cầu riêng của từng dự án, có thể là khởi tạo clock, GPIO, UART, v.v.
    */
   pal_memrp_get_sys_info(NULL, NULL, NULL); // Gọi hàm này để đảm bảo các biểu tượng linker script được sử dụng và không bị tối ưu hóa mất
-  pal_stm32_h723_nvic_config();
+  pal_stm32_f103_nvic_config();
 }
 
-void pal_stm32_h723_idle_sleep(void) {
+void pal_stm32_f103_idle_sleep(void) {
 
 }
 
-void pal_stm32_h723_nvic_config(void) {
+void pal_stm32_f103_nvic_config(void) {
 //	NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
 }
 
-void pal_stm32_h723_exti_init(ui32 IRQnum) {
+void pal_stm32_f103_exti_init(ui32 IRQnum) {
 
 }
 
-void pal_stm32_h723_check_hardfault_reason(char* retr) {
+void pal_stm32_f103_check_hardfault_reason(char* retr) {
 }
 
 void pal_memrp_get_sys_info(ui32 *rom_used, ui32 *ram_used, ui32 *stack_curr) {
