@@ -17,6 +17,11 @@ Câu hỏi gốc *"ai sẽ thực thi quyền quản lý... để copy dữ li�
 1. **Sinh vùng nhớ tĩnh thật cho `glbda:`** - đây là việc của PLTF, không phải của `uedp_msg.c`. Hiện `pltf/pycdscriptor/generators/` đã có `corecfgpgen.py`, `appcfgpgen.py`, `appdeclpgen.py`... nhưng **chưa có generator nào sinh khai báo biến toàn cục thật** từ khối `glbda:`. Đề xuất bổ sung 1 generator mới (ví dụ `gda_tsgen.py`) sinh ra 1 cặp file `.h`/`.c` khai báo đúng các biến `name`/`type`/`initial_value` đã mô tả trong YAML - đây mới là "nơi quản lý" thật sự của dữ liệu GDA, không phải 1 dpool kiểu message-pool.
 2. **Truy cập đồng thời (concurrency)** - đây là vấn đề thật, nhưng khác bản chất với lo ngại "dangling pointer" ban đầu. GDA đưa **shared mutable global state** (bypass hàng đợi message, truy cập trực tiếp qua con trỏ) trở lại vào một hệ thống vốn được thiết kế xoay quanh message-passing chính vì muốn tránh race condition giữa các task. Khi 1 task đang `ptype: VAL` (copy dữ liệu vào biến toàn cục) trong lúc task khác đang đọc qua `ptype: REF`, cần bảo vệ bằng critical section - tái dùng đúng cặp `pal_enter_critical()`/`pal_exit_critical()` đã dùng nhất quán khắp core, không cần cơ chế đồng bộ mới.
 
+<!-- TASK 
+- Sửa đổi đường dẫn của jnerator
+- Bổ sung status cho đề xuất
+-->
+
 ## Đề xuất kết luận
 
 - **Không bổ sung dpool GDA mới trong `uedp_msg.c`** - tái dùng nguyên `ALLOC` pool hiện có cho việc truyền tham chiếu tới biến GDA.
