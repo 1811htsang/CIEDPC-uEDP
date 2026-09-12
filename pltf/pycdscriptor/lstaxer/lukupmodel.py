@@ -20,7 +20,6 @@ Each event has a start_mark and end_mark that indicate the position of the event
 '''
 
 def _extract_anchor_map_for_indexed_group(yaml_text, group_name):
-  """Collect anchor names for entries under an indexed YAML group like tnorms/tpolls/sigs."""
   anchor_map = {}
   current_index = None
   in_group = False
@@ -38,7 +37,6 @@ def _extract_anchor_map_for_indexed_group(yaml_text, group_name):
   return anchor_map
 
 def _extract_anchor_list_for_group(yaml_text, group_name):
-  """Collect anchors attached to mapping items in a top-level YAML sequence."""
   anchors = []
   in_group = False
   sequence_depth = None
@@ -60,24 +58,17 @@ def _extract_anchor_list_for_group(yaml_text, group_name):
   return anchors
 
 def lukupmodel_tnorm_resrc(yaml_text):
-  """
-  Parse the raw `tnorms` mapping from YAML and split each indexed entry into the
-  resource model expected by `C_tnorm_resrc_obj`.
-
-  The event stream design in the notes shows the dependency chain:
-    tnorms -> index -> mapping anchor -> tsm_resrc -> ... -> fsm_resrc -> ...
-  We keep this in mind by using the YAML document structure rather than a raw
-  flat scalar parser, so the resulting model stays aligned with the schema in
-  `pydantic_model.resrc.C_tnorm_resrc_obj`.
-  """
   payload = yaml.safe_load(yaml_text) or {}
   entries = payload.get('tnorms', {})
   if not isinstance(entries, dict):
     return []
 
-  # Extract anchors when they are present in the source YAML. This mirrors the
-  # notes in the file: the object anchor is encountered right after the numeric
-  # index and before the nested resource blocks are mapped.
+  # NOTE 
+  '''
+  Extract anchors when they are present in the source YAML. This mirrors the
+  notes in the file: the object anchor is encountered right after the numeric
+  index and before the nested resource blocks are mapped.
+  '''
   anchor_map = {}
   current_index = None
   in_tnorms = False
@@ -128,7 +119,6 @@ def lukupmodel_tnorm_resrc(yaml_text):
   return out
 
 def lukupmodel_tpoll_resrc(yaml_text):
-  """Parse tpolls entries into C_tpoll_resrc_obj objects."""
   payload = yaml.safe_load(yaml_text) or {}
   entries = payload.get('tpolls', {})
   if not isinstance(entries, dict):
@@ -152,7 +142,6 @@ def lukupmodel_tpoll_resrc(yaml_text):
   return out
 
 def lukupmodel_sig_resrc(yaml_text):
-  """Parse sigs entries into C_sig_obj objects."""
   payload = yaml.safe_load(yaml_text) or {}
   entries = payload.get('sigs', {})
   if not isinstance(entries, dict):
@@ -309,7 +298,6 @@ def _parse_escal_obj(data):
   )
 
 def lukupmodel_tnorm_logic(yaml_text):
-  """Parse the `tlist` entries with a `tnorm` task into C_tnorm_obj models."""
   payload = yaml.safe_load(yaml_text) or {}
   tlist = payload.get('tlist', [])
   if not isinstance(tlist, list):
@@ -380,27 +368,9 @@ def lukupmodel_tpoll_logic(yaml_text):
 
   return out
 
-def lukupmodel_isr_logic(yaml_text):
-  """Parse top-level ISR entries into C_isr_obj models."""
-  payload = yaml.safe_load(yaml_text) or {}
-  entries = payload.get('isr', [])
-  if not isinstance(entries, list):
-    return []
-
-  out = []
-  for item in entries:
-    if not isinstance(item, dict):
-      continue
-    out.append(C_isr_obj(
-      id=str(item.get('id', '')),
-      to=_normalize_alias_value(item.get('to')) or '',
-      sig=_normalize_alias_value(item.get('sig'), 'id_symbol') or '',
-    ))
-
-  return out
+# DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
 
 def lukupmodel_outexec_logic(yaml_text):
-  """Parse top-level OUTEXEC entries into C_outexec_obj models."""
   payload = yaml.safe_load(yaml_text) or {}
   entries = payload.get('outexec', [])
   if not isinstance(entries, list):
@@ -420,11 +390,9 @@ def lukupmodel_outexec_logic(yaml_text):
   return out
 
 def lukupmodel_glbda_logic(yaml_text):
-  """Parse the top-level `glbda` section into C_gda_resrc_obj models."""
   payload = yaml.safe_load(yaml_text) or {}
   entries = payload.get('glbda', [])
   if not isinstance(entries, list):
-    # Some YAML variants use a mapping keyed by numeric index instead of a list.
     entries = payload.get('glbda', {})
     if isinstance(entries, dict):
       items = []
@@ -492,7 +460,7 @@ if __name__ == '__main__':
 
   tnorm_logic_items = lukupmodel_tnorm_logic(yaml_sample)
   tpoll_logic_items = lukupmodel_tpoll_logic(yaml_sample)
-  isr_logic_items = lukupmodel_isr_logic(yaml_sample)
+  # DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
   outexec_logic_items = lukupmodel_outexec_logic(yaml_sample)
   glbda_logic_items = lukupmodel_glbda_logic(yaml_sample)
 
@@ -537,12 +505,7 @@ if __name__ == '__main__':
       print('  action =', act.actv, act.to, act.sig, act.data, act.ptype)
     print('\n')
 
-  print('isr_logic_count=', len(isr_logic_items))
-  for item in isr_logic_items:
-    print('isr_id =', item.id)
-    print('isr_to =', item.to)
-    print('isr_sig =', item.sig)
-    print('\n')
+  # DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
 
   print('outexec_logic_count=', len(outexec_logic_items))
   for item in outexec_logic_items:
@@ -561,713 +524,10 @@ if __name__ == '__main__':
     print('\n')
 
 
-# TASK
+# DEPRECATED - Old TASK
 '''
 1. Thực hiện phân tích cấu trúc trả về của event để phân tích chiến lược xử lý mapping vào model.
 2. Xây dựng các chuỗi phân tách phụ thuộc sẵn có từ lstaxer.strucjec để hỗ trợ triển khai.
 
 # STATUS - done
-'''
-
-# DOC - Sample output for strategy of parsing into pydantic model
-
-# NOTE - Extracting event stream
-
-''' 
-# SECTION - Idea for parsing into pydantic model
-# LINK - pltf/pycdscriptor/lstaxer/lukupmodel.py:70
-
-Follow from sample idea with parsing follow specific attribute,
-we should add another mapping to specify which chain should be ignored
-when mapping into pydantic model, because some attribute is not used in the model, 
-but it is used in the YAML file to support semantic meaning.
-
-For example, when moving between level tags like `tsm_resc` and `states`,
-it is not necessary to check for any attribute between.
-However, with the mapping between the specific attribute and the level tag,
-it can be used to bypass the intermediate attribute and directly map to the next level tag.
-# !SECTION
-'''
-
-'''
-[StreamStartEvent(),
- DocumentStartEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tnorms'), # ANCHOR - must have section
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'),
- # NOTE - entry of tnorms must map to sequence structure tsm_resrc -> fsm_resrc -> id_symbol -> queue_name -> handler -> hex_val
- # NOTE - anchor is ahead of any attribute of the mapping, therefore, must be used to check the logic of the mapping
- MappingStartEvent(anchor='tnorm1-ctrl', tag=None, implicit=True),
- # NOTE - tsm_resc must map to sequence structure states -> state_trans -> object -> table
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_resrc'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='states'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_usr_state_idle'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_usr_state_running'),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='state_trans'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_usr_state_idle_trans'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_usr_state_running_trans'),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='object'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_usr'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='table'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_usr_tbl'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm_resrc'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- # NOTE - fsm_resrc must map to sequence structure states -> object
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='states'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='FSM_TASK_1_STATE_1_ID'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='FSM_TASK_1_STATE_2_ID'),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='object'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='FSM_TASK_1_ID'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_USR'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='queue_name'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tnorm_usr_msgq'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='handler'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tnorm_usr_nhler'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0xe3'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='2'),
- MappingStartEvent(anchor='tnorm2-ctrl', tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_resrc'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='states'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_a_state_idle'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_a_state_waiting'),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='state_trans'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_a_state_idle_trans'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_a_state_waiting_trans'),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='object'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_a'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='table'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_a_tbl'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm_resrc'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='states'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='FSM_TASK_2_STATE_1_ID'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='FSM_TASK_2_STATE_2_ID'),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='object'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='FSM_TASK_2_ID'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_A'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='queue_name'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tnorm_a_msgq'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='handler'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tnorm_a_nhler'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0xe4'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='3'),
- MappingStartEvent(anchor='tnorm3-ctrl', tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_resrc'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='states'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TSM_TASK_3_STATE_1_ID'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TSM_TASK_3_STATE_2_ID'),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='state_trans'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TSM_TASK_3_STATE_1_ID_trans'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TSM_TASK_3_STATE_2_ID_trans'),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='object'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TSM_TASK_3_ID'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='table'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TSM_TASK_3_ID_tbl'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm_resrc'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='states'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm_task_b_state_idle'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm_task_b_state_busy'),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='object'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm_task_b'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_B'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='queue_name'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tnorm_b_msgq'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='handler'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tnorm_b_nhler'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0xe5'),
- MappingEndEvent(),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tpolls'), # ANCHOR - must have section
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'),
- MappingStartEvent(anchor='tpoll1-ctrl', tag=None, implicit=True),
- # NOTE - entry of tpolls must map to sequence structure id_symbol -> handler -> hex_val
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_POLL_MEMRP'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='handler'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tpoll_memrp'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0xd0'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='2'),
- MappingStartEvent(anchor='tpoll2-ctrl', tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_POLL_BLINK'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='handler'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tpoll_blink'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0xd1'),
- MappingEndEvent(),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sigs'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'),
- MappingStartEvent(anchor='sig1', tag=None, implicit=True),
- # NOTE - entry of sigs must map to sequence structure id_symbol -> hex_val
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='SIG_USR_START'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0x1'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='2'),
- MappingStartEvent(anchor='sig2', tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='SIG_USR_STOP'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0x2'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='3'),
- MappingStartEvent(anchor='sig3', tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='SIG_0X34'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0x3'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='4'),
- MappingStartEvent(anchor='sig4', tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='SIG_0XFF'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0x4'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='5'),
- MappingStartEvent(anchor='sig5', tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='SIG_0X12'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0x5'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='6'),
- MappingStartEvent(anchor='sig6', tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='SIG_0XAA'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0x6'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='7'),
- MappingStartEvent(anchor='sig7', tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id_symbol'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='SIG_HALT_NOW'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='hex_val'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='0x7'),
- MappingEndEvent(),
- MappingEndEvent(),
- # NOTE - ignore
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='pject'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='uEDP_PingPong_Full_Validation'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='versh'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1.2.0-pre'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='glbda'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'),
- ScalarEvent(anchor='gda_status', tag=None, implicit=(True, False), value=''),
- # NOTE - entry of glbda must map to sequence structure name -> type -> initial_value
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='name'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='GDA_SYSTEM_STATUS'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='type'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='const char*'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='initial_value'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='STATUS: INITIALIZING'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='2'),
- ScalarEvent(anchor='gda_counter', tag=None, implicit=(True, False), value=''),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='name'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='GDA_COUNTER'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='type'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='int'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='initial_value'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='0'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='3'),
- ScalarEvent(anchor='gda_flag', tag=None, implicit=(True, False), value=''),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='name'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='GDA_FLAG'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='type'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='bool'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='initial_value'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='false'),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tlist'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tnorm'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_USR'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- # NOTE - entry of tsm-item must map to sequence structure id -> trans -> on-ntry -> on-actv -> on-exit
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_usr_state_idle'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='trans'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- # NOTE - entry of trans must map to single trans-obj or list of trans-obj
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- # NOTE - entry of trans-obj must map to sequence structure sig -> goto
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig1'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='goto'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_usr_state_running'),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_ntry'),
- # NOTE - on-ntry must map to single actv-obj or list of actv-obj = steps
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='steps'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- # NOTE - entry of steps is a list of actv-obj
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- # NOTE - entry of steps or single actv-obj must map to sequence structure actv -> to -> sig -> data -> ptype
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_itnlog_init()'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_itnlog_set_output(pal_logdp_dispatch)'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_actv'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='steps'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_itnlog_log'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='[USR][IDLE] Starting sequence...'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_task_norm_post_msg'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_A'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig1'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_exit'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_itnlog_log'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='[USR][IDLE] Sequence finished.'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_usr_state_running'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='trans'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig2'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='goto'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_usr_state_idle'),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_ntry'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_itnlog_log'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='[USR][RUNNING] Sequence started.'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_actv'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='steps'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_itnlog_log'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='[USR][RUNNING] Posting message to TASK_NORM_A...'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_task_norm_post_msg'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_A'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig1'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- AliasEvent(anchor='gda_status'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='REF'),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_exit'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='steps'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ocesvc_register'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='itnlog_dump_svc'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='<<'),
- AliasEvent(anchor='tnorm1-ctrl'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tnorm'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_A'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_a_state_idle'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='trans'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig1'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='goto'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_a_state_waiting'),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_ntry'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_exit'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_a_state_waiting'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='trans'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig3'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='goto'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='STAY'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig4'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='goto'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tsm_task_a_state_idle'),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_ntry'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_post_msg'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_B'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig5'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_actv'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='steps'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_post_msg'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_B'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig6'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_itnlog_log'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='[TASK_NORM_A][WAITING_B] Posted SIG_0xAA to TASK_NORM_B.'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_exit'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='escal'),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='mode'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='slnf'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='trigger'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_sig'),
- AliasEvent(anchor='sig7'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='post_urgent'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='<<'),
- AliasEvent(anchor='tnorm2-ctrl'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tnorm'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_B'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm_task_b_state_idle'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_recv'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig5'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='goto'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm_task_b_state_busy'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='steps'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_task_norm_post_msg'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_A'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig3'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- AliasEvent(anchor='gda_status'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='VAL'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_task_norm_post_msg'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_A'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig4'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- AliasEvent(anchor='gda_status'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='VAL'),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm_task_b_state_busy'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='on_recv'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig6'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='goto'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='fsm_task_b_state_idle'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='steps'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_task_norm_post_msg'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_USR'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig2'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- AliasEvent(anchor='gda_status'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='REF'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='uedp_itnlog_log'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- AliasEvent(anchor='gda_status'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='VAL'),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='<<'),
- AliasEvent(anchor='tnorm3-ctrl'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tpoll'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_POLL_MEMRP'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='exec'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='pal_memrp_report()'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='<<'),
- AliasEvent(anchor='tpoll1-ctrl'),
- MappingEndEvent(),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='tpoll'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_POLL_BLINK'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='exec'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='actv'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='pal_blink_led()'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='data'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ptype'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='<<'),
- AliasEvent(anchor='tpoll2-ctrl'),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='isr'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='id'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='ISR_HARD_STOP'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='to'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='TASK_NORM_A'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='sig'),
- AliasEvent(anchor='sig7'),
- MappingEndEvent(),
- SequenceEndEvent(),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='outexec'),
- SequenceStartEvent(anchor=None, tag=None, implicit=True),
- MappingStartEvent(anchor=None, tag=None, implicit=True),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='name'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='OCE_ITNLOG_DUMP'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='handler'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='itnlog_dump_handler'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='context'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='NULL'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='state'),
- ScalarEvent(anchor=None, tag=None, implicit=(True, False), value='READY'),
- MappingEndEvent(),
- SequenceEndEvent(),
- MappingEndEvent(),
- DocumentEndEvent(),
- StreamEndEvent()]
 '''
