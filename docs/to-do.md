@@ -518,7 +518,9 @@ Sang đã review tài liệu thiết kế và approved.
 
 - [x] Remove dead code liên quan đến `sys.path` của `uedp.py`
 - [x] Bổ sung khả năng tham số `--it` và `--n-it` để hỗ trợ khả năng trực tiếp sinh code từ .config không cần thông qua menuconfig.
-- [ ] Thực hiện bổ sung C-type API cho palobj STM32H723 (abbr H723) và ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD. //NOTE - Do trước đó việc bổ sung đã quên mất kiểm tra nội dung nên cần phải raise lại
+- [x] Import include configuration cho nền tảng STM32CubeIDE.
+- [x] Bổ sung template C-type API cho archobj STM32F103 (abbr F103) để hỗ trợ task BST.
+- [ ] Thực hiện bổ sung C-type API cho archobj STM32F103 (abbr F103), archobj STM32H723 (abbr H723) và archobj ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD. //NOTE - Do trước đó việc bổ sung đã quên mất kiểm tra nội dung nên cần phải raise lại
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- NOTE - Expectation for PLTF.TSD/TLC
