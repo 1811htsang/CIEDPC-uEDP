@@ -212,9 +212,9 @@ Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiệ
 - [x] Bổ sung phiên bản tiếng anh của `user-manual` để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
 - [x] Bổ sung sửa đổi tài liệu thiết kế PLTF bản EN và VN. //NOTE - Ở task này là kiểm tra sửa đổi tài liệu thiết kế PLTF bản EN và VN theo các thay đổi về module name và thiết kế logic của các module.
 - [x] Kiểm tra lại các thay đổi mới trong tài liệu cú pháp sau hiệu chỉnh của bên nhánh chore để đảm bảo documentation và source code được đồng bộ và nhất quán. //NOTE - Follow theo commit số `bab87c3dece35ccfcb71888f1086b1c45fa0b4f7` của nhánh chore.
-- [ ] Hỗ trợ newcomer trong việc nắm bắt các thay đổi mới trong tài liệu cú pháp và source code của dự án μEDP, bao gồm việc giải thích các thay đổi về module name, thiết kế logic của các module và các hướng dẫn phát triển chi tiết để giúp newcomer hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng mới trong việc phát triển ứng dụng trên nền tảng μEDP. //NOTE - Minh sẽ thực hiện hướng dẫn.
-- [ ] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
-- [ ] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
+- [x] Hỗ trợ newcomer trong việc nắm bắt các thay đổi mới trong tài liệu cú pháp và source code của dự án μEDP, bao gồm việc giải thích các thay đổi về module name, thiết kế logic của các module và các hướng dẫn phát triển chi tiết để giúp newcomer hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng mới trong việc phát triển ứng dụng trên nền tảng μEDP. //NOTE - Minh sẽ thực hiện hướng dẫn.
+- [x] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
+- [x] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
 
 <!-- NOTE - Lưu ý cho task bên trên
