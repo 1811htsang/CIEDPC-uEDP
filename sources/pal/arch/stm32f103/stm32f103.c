@@ -1,5 +1,5 @@
 /**
- * @file stm32h723.c
+ * @file stm32f103.c
  * @author Shang Huang
  * @brief Implementation of STM32 Architecture Abstraction Layer for UEDP
  * @version 0.1
@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "stm32h723.h"
+#include "stm32f103.h"
 #include "uedp_core.h"
 #include "uedp_task.h"
 #include "uedp_msg.h"
